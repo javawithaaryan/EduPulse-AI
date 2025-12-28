@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 reveal">
+    <div class="col-12">
+        <h2 class="hero-headline mb-3">Search Results</h2>
+
+        <!-- Search Bar -->
+        <form action="{{ url_for('library.search') }}" method="GET">
+            <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-white border-0 ps-4"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" name="q" class="form-control border-0 py-3"
+                    placeholder="Search topics, lessons, or AI summaries..." value="{{ query }}" autofocus>
+                <button class="btn btn-primary px-5" type="submit">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results Count -->
+<div class="d-flex justify-content-between align-items-center mb-4 reveal">
+    <h5 class="text-secondary mb-0">Found {{ count }} result{% if count != 1 %}s{% endif %} for "{{ query }}"</h5>
+    <a href="{{ url_for('library.hub') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-2"></i>Back to Library
+    </a>
+</div>
+
+<!-- Search Results -->
+{% if results %}
+<div class="row g-4 reveal">
+    {% for resource in results %}
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="badge bg-light text-primary">{{ resource.subject }}</span>
+                    <span
+                        class="badge badge-soft-{{ 'success' if resource.difficulty == 'Beginner' else 'warning' if resource.difficulty == 'Intermediate' else 'danger' }}">
+                        {{ resource.difficulty }}
+                    </span>
+                </div>
+                <h5 class="fw-bold mb-2">{{ resource.title }}</h5>
+                <p class="text-secondary small mb-3">
+                    {{ resource.description[:150] if resource.description else 'No description available' }}...
+                </p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i
+                            class="fas fa-{{ 'file-pdf' if resource.resource_type == 'PDF' else 'video' if resource.resource_type == 'Video' else 'book' }} me-1"></i>
+                        {{ resource.resource_type }}
+                    </small>
+                    <a href="{{ url_for('library.view_resource', id=resource.id) }}" class="btn btn-sm btn-primary">
+                        View Resource <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card border-0 shadow-sm reveal">
+    <div class="card-body p-5 text-center">
+        <i class="fas fa-search fa-3x text-muted mb-3 opacity-50"></i>
+        <h5 class="mb-2">No results found</h5>
+        <p class="text-secondary mb-4">We couldn't find any resources matching "{{ query }}"</p>
+        <div class="row g-3 justify-content-center">
+            <div class="col-auto">
+                <p class="small text-secondary mb-2">Try searching for:</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+            <a href="{{ url_for('library.search', q='Machine Learning') }}" class="badge badge-soft-primary p-2">Machine
+                Learning</a>
+            <a href="{{ url_for('library.search', q='Python') }}" class="badge badge-soft-primary p-2">Python
+                Programming</a>
+            <a href="{{ url_for('library.search', q='Mathematics') }}"
+                class="badge badge-soft-primary p-2">Mathematics</a>
+            <a href="{{ url_for('library.search', q='Chemistry') }}" class="badge badge-soft-primary p-2">Chemistry</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="alert alert-info rounded-xl shadow-sm mt-4 reveal">
+    <h6 class="alert-heading"><i class="fas fa-magic me-2"></i>AI-Powered Search</h6>
+    <p class="mb-0 small">Our search uses intelligent matching to find the most relevant resources. Results are ranked
+        by topic relevance, not just keyword matches.</p>
+</div>
+{% endblock %}

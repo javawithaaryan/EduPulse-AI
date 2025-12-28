@@ -26,6 +26,44 @@ def hub():
                          rec_reasons=rec_reasons,
                          recent=recent)
 
+@library_bp.route('/search')
+@login_required
+def search():
+    """Semantic search for library resources"""
+    query = request.args.get('q', '')
+    
+    if not query:
+        return redirect(url_for('library.hub'))
+    
+    # Simple keyword search (can be enhanced with OpenAI embeddings)
+    search_terms = query.lower().split()
+    
+    results = Resource.query.filter(
+        db.or_(
+            Resource.title.ilike(f'%{query}%'),
+            Resource.description.ilike(f'%{query}%'),
+            Resource.subject.ilike(f'%{query}%')
+        )
+    ).all()
+    
+    # Score results based on relevance (simple matching)
+    scored_results = []
+    for res in results:
+        score = 0
+        text = f"{res.title} {res.description} {res.subject}".lower()
+        for term in search_terms:
+            score += text.count(term)
+        scored_results.append({'resource': res, 'score': score})
+    
+    # Sort by relevance
+    scored_results.sort(key=lambda x: x['score'], reverse=True)
+    results = [r['resource'] for r in scored_results]
+    
+    return render_template('library/search.html',
+                         query=query,
+                         results=results,
+                         count=len(results))
+
 @library_bp.route('/resource/<int:id>')
 @login_required
 def view_resource(id):
