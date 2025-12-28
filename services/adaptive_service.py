@@ -1,5 +1,4 @@
 from models import db
-from models.quiz import QuizAttempt, Quiz
 from models.performance import Performance
 from models.library import Resource
 
@@ -118,15 +117,13 @@ class AdaptiveService:
         if not perf:
             return 'Beginner'
         
-        # Average score-based difficulty
-        recent_attempts = QuizAttempt.query.filter_by(
-            student_id=user_id
-        ).order_by(QuizAttempt.submitted_at.desc()).limit(3).all()
-        
-        if not recent_attempts:
+        # Use risk level to suggest difficulty (avoids quiz query)
+        if perf.risk_level == 'high':
             return 'Beginner'
-        
-        avg_score = sum(a.score for a in recent_attempts) / len(recent_attempts)
+        elif perf.risk_level == 'medium':
+            return 'Intermediate'
+        else:
+            return 'Advanced'
         
         if avg_score < 6:
             return 'Beginner'
