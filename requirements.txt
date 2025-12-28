@@ -8,3 +8,4 @@ azure-ai-vision-imageanalysis
 azure-communication-sms
 azure-core
 requests
+gunicorn
