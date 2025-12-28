@@ -99,35 +99,36 @@
 
 {% block scripts %}
 <script>
+    // Define resource data globally for JS usage
+    const resourceTitle = {{ resource.title| tojson }};
+    const resourceDesc = {{ resource.description| tojson }};
+
     // Text-to-Speech (Voice Assistant)
     function readAloud() {
-        const title = "{{ resource.title }}";
-        const desc = {{ resource.description| tojson
-    }};
-    const text = `${title}. ${desc}`;
+        const text = `${resourceTitle}. ${resourceDesc}`;
 
-    if ('speechSynthesis' in window) {
-        // Cancel current speech
-        window.speechSynthesis.cancel();
+        if ('speechSynthesis' in window) {
+            // Cancel current speech
+            window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.lang = 'en-US';
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.lang = 'en-US';
 
-        utterance.onstart = () => {
-            showAIOutput('🔊 Reading Aloud', 'Playing audio... Click the × to stop.');
-            event.target.innerHTML = '<i class="fas fa-stop text-danger me-2"></i> Stop Reading';
-        };
-        utterance.onend = () => {
-            showAIOutput('✅ Finished', 'Reading complete!');
-            event.target.innerHTML = '<i class="fas fa-volume-up text-primary me-2"></i> Read Aloud';
-        };
+            utterance.onstart = () => {
+                showAIOutput('🔊 Reading Aloud', 'Playing audio... Click the × to stop.');
+                event.target.innerHTML = '<i class="fas fa-stop text-danger me-2"></i> Stop Reading';
+            };
+            utterance.onend = () => {
+                showAIOutput('✅ Finished', 'Reading complete!');
+                event.target.innerHTML = '<i class="fas fa-volume-up text-primary me-2"></i> Read Aloud';
+            };
 
-        window.speechSynthesis.speak(utterance);
-    } else {
-        showAIOutput('❌ Not Supported', "Sorry, your browser doesn't support Text-to-Speech.");
-    }
+            window.speechSynthesis.speak(utterance);
+        } else {
+            showAIOutput('❌ Not Supported', "Sorry, your browser doesn't support Text-to-Speech.");
+        }
     }
 
     // AI Translation
@@ -142,9 +143,9 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'translate',
-                    text: "{{ resource.title }}\n{{ resource.description }}",
-                    target_lang: 'Spanish'
+                    "action": "translate",
+                    "text": resourceTitle + "\n" + resourceDesc,
+                    "target_lang": "Spanish"
                 })
             });
             const data = await response.json();
@@ -169,24 +170,24 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'summarize',
-                    text: {{ resource.description | tojson }},
-                title: {{ resource.title | tojson }}
+                    "action": "summarize",
+                    "text": resourceDesc,
+                    "title": resourceTitle
                 })
             });
-    const data = await response.json();
-    showAIOutput('📝 Key Points Summary', data.result);
+            const data = await response.json();
+            showAIOutput('📝 Key Points Summary', data.result);
         } catch (error) {
-        showAIOutput('❌ Error', 'Failed to summarize content. Please try again.');
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
+            showAIOutput('❌ Error', 'Failed to summarize content. Please try again.');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
     }
 
     // Generate Quiz Mock
     function generateQuiz() {
-        showAIOutput('🎯 Practice Quiz', `Generating interactive quiz based on "${{{ resource.title | tojson }} }"... \n\n✨ Feature coming in next update! This will create personalized practice questions.`);
+        showAIOutput('🎯 Practice Quiz', `Generating interactive quiz based on "${resourceTitle}"...\n\n✨ Feature coming in next update! This will create personalized practice questions.`);
     }
 
     function showAIOutput(title, content) {
