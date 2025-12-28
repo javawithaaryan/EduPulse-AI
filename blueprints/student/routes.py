@@ -127,4 +127,22 @@ def submit_quiz(id):
     
     return {"score": score, "feedback": ai_feedback, "details": feedback_details}
 
-
+@student_bp.route('/learning_path')
+@login_required
+def learning_path():
+    """Display personalized learning path"""
+    from services.adaptive_service import AdaptiveService
+    
+    # Get subject from query or default to Mathematics
+    subject = request.args.get('subject', 'Mathematics')
+    
+    # Generate adaptive learning path
+    path_data = AdaptiveService.get_learning_path(current_user.id, subject)
+    
+    # Get available subjects
+    subjects = ['Mathematics', 'Science', 'Computer Science', 'History', 'English']
+    
+    return render_template('student/learning_path.html',
+                         path_data=path_data,
+                         subjects=subjects,
+                         current_subject=subject)
