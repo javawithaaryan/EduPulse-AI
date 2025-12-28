@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 reveal">
+    <div class="col-12">
+        <h2 class="hero-headline mb-1">Well-being <span class="text-gradient">Insights</span></h2>
+        <p class="text-secondary mb-0">Track your emotional journey over time.</p>
+    </div>
+</div>
+
+<div class="row g-4 reveal">
+    <!-- Average Stats -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-4 text-center">
+            <h6 class="text-secondary mb-3">AVERAGE MOOD (LAST 7 DAYS)</h6>
+            <div class="display-3 mb-2">
+                {% if avg_mood >= 4 %}😄{% elif avg_mood >= 3 %}🙂{% elif avg_mood >= 2 %}😐{% else %}😔{% endif %}
+            </div>
+            <p class="text-primary fw-bold mb-0">{{ avg_mood }} / 5</p>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-4 text-center">
+            <h6 class="text-secondary mb-3">AVERAGE STRESS</h6>
+            <div class="display-3 mb-2">
+                {% if avg_stress <= 2 %}😌{% elif avg_stress <=3 %}🙂{% elif avg_stress <=4 %}😰{% else %}😫{% endif %}
+                    </div>
+                    <p
+                        class="{% if avg_stress >= 4 %}text-danger{% elif avg_stress >= 3 %}text-warning{% else %}text-success{% endif %} fw-bold mb-0">
+                        {{ avg_stress }} / 5
+                    </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Timeline -->
+    <div class="card border-0 shadow-sm mt-4 reveal">
+        <div class="card-header bg-white border-bottom border-light py-3">
+            <h5 class="mb-0">7-Day Check-in History</h5>
+        </div>
+        <div class="card-body">
+            {% if checkins %}
+            <div class="table-responsive">
+                <table class="table table-borderless">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Mood</th>
+                            <th>Stress</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for checkin in checkins %}
+                        <tr>
+                            <td>{{ checkin.date.strftime('%b %d') }}</td>
+                            <td>
+                                <span class="fs-4">
+                                    {% if checkin.mood_level == 1 %}😔{% elif checkin.mood_level == 2 %}😕{% elif
+                                    checkin.mood_level == 3 %}😐{% elif checkin.mood_level == 4 %}🙂{% else %}😄{% endif
+                                    %}
+                                </span>
+                                <small class="text-secondary">{{ checkin.mood_level }}/5</small>
+                            </td>
+                            <td>
+                                <span class="fs-4">
+                                    {% if checkin.stress_level == 1 %}😌{% elif checkin.stress_level == 2 %}🙂{% elif
+                                    checkin.stress_level == 3 %}😐{% elif checkin.stress_level == 4 %}😰{% else %}😫{%
+                                    endif %}
+                                </span>
+                                <small class="text-secondary">{{ checkin.stress_level }}/5</small>
+                            </td>
+                            <td><small class="text-secondary">{{ checkin.notes[:50] if checkin.notes else '-' }}</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-secondary">
+                <i class="fas fa-chart-line fa-3x mb-3 opacity-50"></i>
+                <p class="mb-0">Start checking in daily to build your well-being insights!</p>
+                <a href="{{ url_for('wellbeing.checkin') }}" class="btn btn-primary mt-3">Check In Now</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="alert alert-info rounded-xl shadow-sm mt-4 reveal">
+        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>About This Feature</h6>
+        <p class="mb-0 small">This tool helps you track emotional patterns. It is NOT a medical diagnosis. If you're
+            experiencing persistent distress, please reach out to a counselor or trusted adult.</p>
+    </div>
+    {% endblock %}

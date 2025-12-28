@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1">My <span class="text-gradient">Tasks</span></h2>
+        <p class="text-secondary mb-0">Stay organized and achieve your goals.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+        <a href="{{ url_for('tasks.create_task') }}" class="btn btn-primary btn-ripple">
+            <i class="fas fa-plus me-2"></i>New Task
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Today's Tasks -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom border-light py-3">
+                <h5 class="mb-0"><i class="fas fa-calendar-day text-primary me-2"></i>Today</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for task in today_tasks %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex align-items-start">
+                            <form method="POST" action="{{ url_for('tasks.complete_task', id=task.id) }}" class="me-3">
+                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                    <i class="far fa-circle"></i>
+                                </button>
+                            </form>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ task.title }}</h6>
+                                <small class="text-secondary">{{ task.due_date.strftime('%I:%M %p') if task.due_date
+                                    else 'No time' }}</small>
+                                {% if task.priority == 'high' %}
+                                <span class="badge badge-soft-danger ms-2">High</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-secondary">
+                        <i class="fas fa-check-circle fa-2x mb-2 opacity-50"></i>
+                        <p class="mb-0 small">Nothing due today!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Tasks -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom border-light py-3">
+                <h5 class="mb-0"><i class="fas fa-calendar-week text-accent-green me-2"></i>This Week</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for task in upcoming_tasks %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex align-items-start">
+                            <form method="POST" action="{{ url_for('tasks.complete_task', id=task.id) }}" class="me-3">
+                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                    <i class="far fa-circle"></i>
+                                </button>
+                            </form>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ task.title }}</h6>
+                                <small class="text-secondary">{{ task.due_date.strftime('%b %d') if task.due_date else
+                                    'No date' }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-secondary">
+                        <i class="fas fa-inbox fa-2x mb-2 opacity-50"></i>
+                        <p class="mb-0 small">All caught up!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goals -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom border-light py-3">
+                <h5 class="mb-0"><i class="fas fa-bullseye text-accent-pink me-2"></i>Goals</h5>
+            </div>
+            <div class="card-body">
+                {% for goal in goals %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h6 class="mb-0">{{ goal.title }}</h6>
+                        <span class="text-primary fw-bold">{{ goal.progress_percent }}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-gradient-primary" style="width: {{ goal.progress_percent }}%"></div>
+                    </div>
+                    <small class="text-secondary">Due {{ goal.target_date.strftime('%b %d') if goal.target_date else 'No
+                        deadline' }}</small>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-secondary">
+                    <i class="fas fa-plus-circle fa-2x mb-2 opacity-50"></i>
+                    <p class="mb-0 small">Set a goal to get started!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overdue Alert -->
+{% if overdue_tasks %}
+<div class="alert alert-warning rounded-xl shadow-sm mt-4 reveal">
+    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>{{ overdue_tasks|length }} Overdue Tasks
+    </h6>
+    <ul class="mb-0">
+        {% for task in overdue_tasks[:3] %}
+        <li>{{ task.title }} (was due {{ task.due_date.strftime('%b %d') }})</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}

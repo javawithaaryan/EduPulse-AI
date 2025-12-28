@@ -3,18 +3,27 @@ from flask_login import login_required, current_user
 from models import db
 from models.library import Resource, LearningProgress, LibraryRecommendation
 from services.openai_service import OpenAIService
+from services.recommendation_service import RecommendationService
 
 library_bp = Blueprint('library', __name__, template_folder='templates')
 
 @library_bp.route('/hub')
 @login_required
 def hub():
-    # Fetch recommended resources (mocked or from DB)
-    recommendations = Resource.query.limit(3).all() 
+    # Get AI-powered recommendations for students
+    if current_user.role == 'student':
+        rec_data = RecommendationService.generate_recommendations(current_user.id, limit=3)
+        recommendations = [r['resource'] for r in rec_data]
+        rec_reasons = {r['resource'].id: r['reason'] for r in rec_data}
+    else:
+        recommendations = Resource.query.limit(3).all()
+        rec_reasons = {}
+    
     recent = Resource.query.order_by(Resource.created_at.desc()).limit(5).all()
     
     return render_template('library/hub.html', 
-                         recommendations=recommendations, 
+                         recommendations=recommendations,
+                         rec_reasons=rec_reasons,
                          recent=recent)
 
 @library_bp.route('/resource/<int:id>')

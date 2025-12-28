@@ -10,3 +10,5 @@ from .performance import Performance
 from .quiz import Quiz, Question, QuizAttempt
 from .attendance import Attendance
 from .library import Resource, LearningProgress, LibraryRecommendation
+from .tasks import Task, Goal
+from .wellbeing import EmotionalCheckin, SupportLog

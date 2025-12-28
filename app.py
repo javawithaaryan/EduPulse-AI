@@ -35,6 +35,12 @@ def create_app(config_class=Config):
     
     from blueprints.library.routes import library_bp
     app.register_blueprint(library_bp, url_prefix='/library')
+    
+    from blueprints.tasks.routes import tasks_bp
+    app.register_blueprint(tasks_bp, url_prefix='/tasks')
+    
+    from blueprints.wellbeing.routes import wellbeing_bp
+    app.register_blueprint(wellbeing_bp, url_prefix='/wellbeing')
 
     # Root Route
     @app.route('/')
