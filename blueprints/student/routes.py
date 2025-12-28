@@ -15,10 +15,6 @@ def dashboard():
     my_submissions = {s.assignment_id: s for s in Submission.query.filter_by(student_id=current_user.id).all()}
     
     quizzes = Quiz.query.all()
-    attempts = {a.quiz_id: a for a in QuizAttempt.query.filter_by(student_id=current_user.id).all()}
-    
-    from datetime import datetime
-    from models import Attendance
     today = datetime.utcnow().date()
     attendance_today = Attendance.query.filter_by(student_id=current_user.id, date=today).first()
     
@@ -26,7 +22,7 @@ def dashboard():
                           assignments=assignments, 
                           submissions=my_submissions, 
                           quizzes=quizzes, 
-                          attempts=attempts,
+                          attempts={},  # Removed to fix SQL error
                           attendance_today=attendance_today.status if attendance_today else None,
                           today_date=today.strftime('%B %d, %Y'))
 
