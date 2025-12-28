@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required, current_user
-from models import db, Assignment, Submission, Performance, Quiz, Question, QuizAttempt
+from models import db, Assignment, Submission, Performance, Quiz, Question, QuizAttempt, Attendance
 from services.blob_service import BlobService
 import json # Added for json.dumps in submit_quiz
 from datetime import datetime
