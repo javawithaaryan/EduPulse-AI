@@ -1,7 +1,6 @@
 from models import db
 from models.library import Resource, LibraryRecommendation
 from models.performance import Performance
-from models.quiz import QuizAttempt
 from models.attendance import Attendance
 from datetime import datetime, timedelta
 
@@ -13,7 +12,6 @@ class RecommendationService:
         """
         Generate personalized resource recommendations based on:
         - Student performance (weak subjects)
-        - Quiz attempt history
         - Attendance patterns
         """
         recommendations = []
@@ -25,25 +23,10 @@ class RecommendationService:
             Performance.risk_level.in_(['medium', 'high'])
         ).all()
         
-        # 2. Get quiz attempts to find struggling topics
-        recent_attempts = QuizAttempt.query.filter_by(
-            student_id=user_id
-        ).order_by(QuizAttempt.submitted_at.desc()).limit(5).all()
-        
-        low_score_subjects = []
-        for attempt in recent_attempts:
-            if attempt.score < 7:  # Below 70%
-                # Get quiz subject (assuming quiz has subject)
-                from models.quiz import Quiz
-                quiz = Quiz.query.get(attempt.quiz_id)
-                if quiz and quiz.subject:
-                    low_score_subjects.append(quiz.subject)
-        
-        # 3. Combine insights
+        # 2. Combine insights
         target_subjects = []
         for perf in weak_subjects:
             target_subjects.append(perf.subject)
-        target_subjects.extend(low_score_subjects)
         
         # Remove duplicates
         target_subjects = list(set(target_subjects))
@@ -82,9 +65,6 @@ class RecommendationService:
         for perf in weak_subjects:
             if perf.subject == resource.subject:
                 reasons.append(f"Addresses your {resource.subject} learning gap")
-        
-        if resource.subject in low_score_subjects:
-            reasons.append(f"Helps improve recent {resource.subject} quiz performance")
         
         # Difficulty matching
         if resource.difficulty == 'Beginner':

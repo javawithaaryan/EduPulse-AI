@@ -30,25 +30,30 @@ class AdaptiveService:
     def get_learning_path(user_id, subject='Mathematics'):
         """Generate personalized learning path for a student"""
         
-        # Get student's quiz history for this subject
-        attempts = QuizAttempt.query.filter_by(student_id=user_id).all()
+        # For MVP, use performance data instead of quiz attempts
+        from models.performance import Performance
         
-        # Calculate mastery for each topic
+        # Get student's performance for this subject  
+        perf = Performance.query.filter_by(
+            student_id=user_id,
+            subject=subject
+        ).first()
+        
+        # Mock mastery scores based on performance
         topic_mastery = {}
-        for attempt in attempts:
-            quiz = Quiz.query.get(attempt.quiz_id)
-            if quiz and quiz.subject == subject:
-                topic = quiz.title  # Assuming quiz title matches topic
-                score = attempt.score
+        if perf:
+            # Use risk level to infer mastery
+            if perf.risk_level == 'low':
+                base_score = 8
+            elif perf.risk_level == 'medium':
+                base_score = 6
+            else:
+                base_score = 4
                 
-                if topic not in topic_mastery:
-                    topic_mastery[topic] = []
-                topic_mastery[topic].append(score)
-        
-        # Calculate average score per topic
-        avg_mastery = {}
-        for topic, scores in topic_mastery.items():
-            avg_mastery[topic] = sum(scores) / len(scores) if scores else 0
+            # Assign scores to first few topics
+            path = AdaptiveService.LEARNING_PATHS.get(subject, [])
+            for i, node in enumerate(path[:3]):
+                topic_mastery[node['topic']] = max(0, base_score - i)
         
         # Get learning path for subject
         path = AdaptiveService.LEARNING_PATHS.get(subject, [])
@@ -60,13 +65,13 @@ class AdaptiveService:
         
         for node in path:
             topic_name = node['topic']
-            mastery_score = avg_mastery.get(topic_name, 0)
+            mastery_score = topic_mastery.get(topic_name, 0)
             
             # Check prerequisites
             prereq = node.get('prerequisite')
             prereq_met = True
             if prereq:
-                prereq_score = avg_mastery.get(prereq, 0)
+                prereq_score = topic_mastery.get(prereq, 0)
                 prereq_met = prereq_score >= 6  # 60% mastery required
             
             node_data = {
