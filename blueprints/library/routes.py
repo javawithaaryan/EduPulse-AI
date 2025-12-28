@@ -12,9 +12,15 @@ library_bp = Blueprint('library', __name__, template_folder='templates')
 def hub():
     # Get AI-powered recommendations for students
     if current_user.role == 'student':
-        rec_data = RecommendationService.generate_recommendations(current_user.id, limit=3)
-        recommendations = [r['resource'] for r in rec_data]
-        rec_reasons = {r['resource'].id: r['reason'] for r in rec_data}
+        try:
+            rec_data = RecommendationService.generate_recommendations(current_user.id, limit=3)
+            recommendations = [r['resource'] for r in rec_data]
+            rec_reasons = {r['resource'].id: r['reason'] for r in rec_data}
+        except Exception as e:
+            # Fallback if recommendation fails
+            print(f"Recommendation error: {e}")
+            recommendations = Resource.query.limit(3).all()
+            rec_reasons = {}
     else:
         recommendations = Resource.query.limit(3).all()
         rec_reasons = {}
