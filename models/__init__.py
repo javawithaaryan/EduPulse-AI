@@ -9,3 +9,4 @@ from .ai_results import AIResult
 from .performance import Performance
 from .quiz import Quiz, Question, QuizAttempt
 from .attendance import Attendance
+from .library import Resource, LearningProgress, LibraryRecommendation

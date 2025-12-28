@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center reveal">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 p-md-5">
+            <h3 class="fw-bold mb-4">Upload Learning Resource</h3>
+
+            <form method="POST">
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-bold">RESOURCE TITLE</label>
+                    <input type="text" name="title" class="form-control form-control-lg"
+                        placeholder="e.g. Introduction to Physics" required>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-bold">SUBJECT</label>
+                        <select name="subject" class="form-select">
+                            <option>Mathematics</option>
+                            <option>Science</option>
+                            <option>History</option>
+                            <option>English</option>
+                            <option>Computer Science</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-bold">TYPE</label>
+                        <select name="type" class="form-select">
+                            <option value="PDF">PDF Document</option>
+                            <option value="Video">Video Lesson</option>
+                            <option value="Note">Notes/Text</option>
+                            <option value="Quiz">Practice Quiz</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-bold">DIFFICULTY LEVEL</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="difficulty" id="diff1" value="Beginner"
+                                checked>
+                            <label class="form-check-label" for="diff1">Beginner</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="difficulty" id="diff2"
+                                value="Intermediate">
+                            <label class="form-check-label" for="diff2">Intermediate</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="difficulty" id="diff3" value="Advanced">
+                            <label class="form-check-label" for="diff3">Advanced</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-bold">DESCRIPTION & KEY TOPICS</label>
+                    <textarea name="description" class="form-control" rows="4"
+                        placeholder="Describe the content and what topics it covers..."></textarea>
+                    <div class="form-text">AI will use this to recommend the content to relevant students.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-bold">FILE UPLOAD (Mock)</label>
+                    <div class="border-2 border-dashed border-light rounded-xl p-5 text-center bg-light">
+                        <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-3"></i>
+                        <p class="mb-0 text-muted">Drag and drop files here or click to browse</p>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3">
+                    <a href="{{ url_for('library.hub') }}" class="btn btn-outline text-muted">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-5">Upload to Library</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
