@@ -35,4 +35,5 @@ class QuizAttempt(db.Model):
     score = db.Column(db.Float)
     total_questions = db.Column(db.Integer)
     feedback = db.Column(db.Text)
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
