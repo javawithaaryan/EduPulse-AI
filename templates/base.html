@@ -33,6 +33,22 @@
                             <i class="fas fa-book me-1"></i>Library
                         </a>
                     </li>
+                    {% if current_user.role == 'student' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-secondary me-3" href="#" id="studentToolsDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-tools me-1"></i>My Tools
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="studentToolsDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('tasks.hub') }}"><i
+                                        class="fas fa-tasks me-2 text-primary"></i>Tasks & Goals</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('wellbeing.checkin') }}"><i
+                                        class="fas fa-heart me-2 text-danger"></i>Well-being</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('student.learning_path') }}"><i
+                                        class="fas fa-route me-2 text-success"></i>Learning Path</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="btn btn-outline btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
                     </li>
