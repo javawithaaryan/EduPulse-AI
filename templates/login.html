@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-md-5 reveal">
+        <div class="card p-5 border-0 shadow-lg rounded-2xl">
+            <div class="text-center mb-5">
+                <div class="mb-4">
+                    <i class="fas fa-pulse fa-3x text-primary op-20"></i>
+                </div>
+                <h2 class="hero-headline h3 mb-2">Welcome <span class="text-gradient">Back</span></h2>
+                <p class="text-secondary small">Login to access your EduPulse workspace</p>
+            </div>
+            <form method="POST">
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-bold">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-light text-muted px-3"><i
+                                class="fas fa-envelope"></i></span>
+                        <input type="email" name="email" class="form-control border-light p-3"
+                            placeholder="name@example.com" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-bold">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-light text-muted px-3"><i
+                                class="fas fa-lock"></i></span>
+                        <input type="password" name="password" class="form-control border-light p-3"
+                            placeholder="••••••••" required>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rememberMe">
+                        <label class="form-check-label small text-secondary" for="rememberMe">Remember me</label>
+                    </div>
+                    <a href="#" class="small text-primary text-decoration-none">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-3 mb-4">Sign In</button>
+                <div class="text-center">
+                    <p class="text-secondary small mb-0">New to EduPulse? <a href="{{ url_for('auth.register') }}"
+                            class="text-primary fw-bold text-decoration-none">Create an account</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .input-group-text {
+        border-top-left-radius: 1rem !important;
+        border-bottom-left-radius: 1rem !important;
+    }
+
+    .form-control {
+        border-top-right-radius: 1rem !important;
+        border-bottom-right-radius: 1rem !important;
+    }
+
+    .form-control:focus {
+        background: white;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+
+    .op-20 {
+        opacity: 0.2;
+    }
+</style>
+{% endblock %}

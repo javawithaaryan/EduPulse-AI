@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-start reveal">
+                <h1 class="hero-headline mb-4">
+                    Smarter Learning.<br><span class="text-gradient">Calmer Classrooms.</span>
+                </h1>
+                <p class="text-secondary mb-5 me-5 lead">
+                    An AI-powered education platform that reduces teacher workload and helps students grow with clarity
+                    and confidence.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-ripple">Get Started</a>
+                    <a href="#features" class="btn btn-outline btn-ripple">See How It Works</a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block reveal" style="transition-delay: 0.2s">
+                <div class="position-relative float-anim">
+                    <img src="{{ url_for('static', filename='images/hero_calm.png') }}" alt="Calm Learning"
+                        class="img-fluid"
+                        style="mix-blend-mode: multiply; -webkit-mask-image: radial-gradient(circle, black 50%, transparent 80%); mask-image: radial-gradient(circle, black 50%, transparent 80%);">
+
+                    <!-- Subtle ambient glow -->
+                    <div class="position-absolute top-50 start-50 translate-middle w-100 h-100 rounded-circle"
+                        style="background: radial-gradient(circle, rgba(91, 108, 255, 0.1) 0%, rgba(243, 246, 251, 1) 70%); z-index: -1;">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5 reveal">
+            <h2 class="h1 mb-3">Designed for Clarity</h2>
+            <p class="text-secondary">Everything you need, nothing you don't.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4 reveal" style="transition-delay: 0.1s">
+                <div class="card h-100">
+                    <div class="mb-4">
+                        <i class="fas fa-magic fa-2x text-gradient"></i>
+                    </div>
+                    <h3 class="h4 mb-3">AI Insight</h3>
+                    <p class="text-secondary mb-0">
+                        Automated grading and deep feedback highlights exactly where you excel and where to focus next.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4 reveal" style="transition-delay: 0.2s">
+                <div class="card h-100">
+                    <div class="mb-4">
+                        <i class="fas fa-chart-line fa-2x text-gradient"></i>
+                    </div>
+                    <h3 class="h4 mb-3">Silent Monitoring</h3>
+                    <p class="text-secondary mb-0">
+                        Track progress trends and potential learning risks without the noise of raw, overwhelming data.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4 reveal" style="transition-delay: 0.3s">
+                <div class="card h-100">
+                    <div class="mb-4">
+                        <i class="fas fa-comments fa-2x text-gradient"></i>
+                    </div>
+                    <h3 class="h4 mb-3">Doubt Resolver</h3>
+                    <p class="text-secondary mb-0">
+                        Ask questions anytime and get instant, clear concept explanations designed for your grade level.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 text-center reveal">
+    <div class="container">
+        <div class="card p-5 border-0 shadow-sm" style="background: var(--gradient-soft)">
+            <h2 class="mb-4">Future-Ready Education</h2>
+            <p class="text-secondary mb-5 mx-auto" style="max-width: 600px;">
+                Join the platform that understands you, guides you, and makes teaching and learning easier every day.
+            </p>
+            <div>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-5 btn-ripple">Get Started
+                    Free</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{% endblock %}

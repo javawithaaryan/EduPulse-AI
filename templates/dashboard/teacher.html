@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-5 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.5rem;">Teacher <span class="text-gradient">Dashboard</span>
+        </h2>
+        <p class="text-secondary mb-0">Manage your assignments and unlock AI-powered student insights.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end d-none d-lg-block">
+        <img src="{{ url_for('static', filename='images/teacher_3d.png') }}" alt="Teacher" class="img-fluid float-anim"
+            style="max-height: 120px;">
+    </div>
+</div>
+
+<!-- AI Insight Card (Phase 2 Upgrade) -->
+<div class="row mb-5 reveal">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm"
+            style="background: var(--primary-glow); border-left: 5px solid var(--primary) !important;">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-4">
+                    <i class="fas fa-brain fa-3x text-primary op-50"></i>
+                </div>
+                <div>
+                    <h4 class="mb-1">{{ ai_insights.headline }}</h4>
+                    <p class="text-secondary mb-0">{{ ai_insights.summary }}</p>
+                    <div class="mt-2">
+                        <span class="badge badge-soft badge-risk-medium"><i class="fas fa-lightbulb me-2"></i>Action: {{
+                            ai_insights.action_item }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Stats -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3 reveal" style="transition-delay: 0.1s">
+        <div class="card stat-card h-100">
+            <div class="stat-label">Total Assignments</div>
+            <div class="stat-value">{{ assignments|length }}</div>
+            <div class="badge-soft badge-risk-low d-inline-block mt-2">Active</div>
+        </div>
+    </div>
+    <div class="col-md-3 reveal" style="transition-delay: 0.2s">
+        <div class="card stat-card h-100">
+            <div class="stat-label">Pending Reviews</div>
+            <div class="stat-value">2</div>
+            <div class="badge-soft badge-risk-medium d-inline-block mt-2">Awaiting AI</div>
+        </div>
+    </div>
+    <div class="col-md-3 reveal" style="transition-delay: 0.3s">
+        <div class="card stat-card h-100">
+            <div class="stat-label">Avg. Class Score</div>
+            <div class="stat-value">7.8</div>
+            <p class="text-secondary small mt-2 mb-0">Out of 10</p>
+        </div>
+    </div>
+    <div class="col-md-3 reveal" style="transition-delay: 0.4s">
+        <div class="card stat-card h-100">
+            <div class="stat-label">Time Saved</div>
+            <div class="stat-value">12h</div>
+            <div class="badge-soft badge-risk-low d-inline-block mt-2"><i class="fas fa-bolt me-1"></i>This week</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4 reveal">
+    <div class="col-12">
+        <ul class="nav nav-pills ms-0 gap-2" id="dashboardTabs" role="tablist">
+            <li class="nav-item">
+                <button class="btn btn-outline active" id="assignments-tab" data-bs-toggle="tab"
+                    data-bs-target="#assignments" type="button">Assignments</button>
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-outline" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance"
+                    type="button">Attendance</button>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="tab-content" id="dashboardTabContent">
+    <div class="tab-pane fade show active" id="assignments">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="h4 mb-0">Recent Assignments</h3>
+            <button class="btn btn-primary btn-ripple" data-bs-toggle="modal" data-bs-target="#newAssignmentModal">
+                <i class="fas fa-plus me-2"></i>New Assignment
+            </button>
+        </div>
+
+        <div class="row g-4 mb-5">
+            {% for assignment in assignments %}
+            <div class="col-md-6 reveal">
+                <div class="card h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">{{ assignment.title }}</h5>
+                            <span class="badge-soft badge-risk-low">{{ assignment.subject }}</span>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-4">{{ assignment.rubric[:120] }}...</p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-light">
+                        <a href="{{ url_for('teacher.trigger_grading', id=assignment.id) }}"
+                            class="btn btn-outline btn-sm btn-ripple">
+                            <i class="fas fa-robot me-2"></i>Run AI Grading
+                        </a>
+                        <span class="text-muted small">
+                            <i class="fas fa-file-alt me-1"></i>{{ assignment.submissions.count() }} submissions
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="quizzes">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="h4 mb-0">Live Quizzes</h3>
+            <button class="btn btn-primary btn-ripple" data-bs-toggle="modal" data-bs-target="#newQuizModal">
+                <i class="fas fa-bolt me-2"></i>Create Quiz
+            </button>
+        </div>
+
+        <div class="row g-4 mb-5">
+            {% for quiz in quizzes %}
+            <div class="col-md-6 reveal">
+                <div class="card h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">{{ quiz.title }}</h5>
+                            <span class="badge-soft badge-risk-low">{{ quiz.subject }}</span>
+                        </div>
+                        <span class="text-muted small">{{ quiz.questions|length }} Qs</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-light">
+                        <button class="btn btn-outline btn-sm">View Stats</button>
+                        <span class="text-muted small">
+                            <i class="fas fa-users me-1"></i>{{ quiz.attempts|length }} attempts
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <p class="text-secondary">No quizzes created yet. Start a live session to engage your students!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Attendance Tab (New) -->
+    <div class="tab-pane fade" id="attendance">
+        <div class="card border-0 shadow-sm p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="h4 mb-0">Class Attendance</h3>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="text-muted small me-2">{{ today_date if today_date else 'Today' }}</span>
+                    <button class="btn btn-outline-primary btn-sm btn-ripple" data-bs-toggle="modal"
+                        data-bs-target="#qrModal">
+                        <i class="fas fa-qrcode me-2"></i>Generate Classroom QR
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div
+                                        class="avatar-sm me-3 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
+                                        {{ student.username[:2]|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ student.username }}</div>
+                                        <div class="text-muted small">{{ student.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span
+                                    class="badge-soft badge-risk-{{ 'low' if student.attendance_today == 'Present' else 'high' }}">
+                                    {{ student.attendance_today if student.attendance_today else 'Not Marked' }}
+                                </span>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('attendance.mark_attendance') }}" method="POST"
+                                    class="d-inline">
+                                    <input type="hidden" name="student_id" value="{{ student.id }}">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="submit" name="status" value="Present"
+                                            class="btn btn-outline-success">Present</button>
+                                        <button type="submit" name="status" value="Absent"
+                                            class="btn btn-outline-danger">Absent</button>
+                                        <button type="submit" name="status" value="Late"
+                                            class="btn btn-outline-warning">Late</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Quiz Modal -->
+<div class="modal fade" id="newQuizModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-2xl shadow-lg">
+            <form action="{{ url_for('teacher.create_quiz') }}" method="POST" id="quizForm">
+                <div class="modal-header border-bottom border-light p-4">
+                    <h5 class="modal-title font-poppins">Create Live Quiz</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label text-secondary small fw-bold">Quiz Title</label>
+                            <input type="text" name="title" class="form-control border-light rounded-xl p-3"
+                                placeholder="e.g. Science Midterm Quiz" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-bold">Subject</label>
+                            <input type="text" name="subject" class="form-control border-light rounded-xl p-3"
+                                placeholder="e.g. Physics" required>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 op-10">
+
+                    <div id="questionContainer">
+                        <!-- Questions will be added here -->
+                    </div>
+
+                    <button type="button" class="btn btn-outline btn-sm w-100 py-3" onclick="addQuestion()">
+                        <i class="fas fa-plus me-2"></i>Add Question
+                    </button>
+
+                    <input type="hidden" name="questions" id="questionsInput">
+                </div>
+                <div class="modal-footer border-top border-light p-4">
+                    <button type="submit" class="btn btn-primary w-100 py-3" onclick="prepareQuizData()">Publish
+                        Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let questions = [];
+
+    function addQuestion() {
+        const qId = Date.now();
+        const html = `
+            <div class="card p-3 mb-3 border-light reveal question-item" id="q_${qId}">
+                <div class="d-flex justify-content-between mb-3">
+                    <h6 class="mb-0">Question</h6>
+                    <button type="button" class="btn btn-link text-danger p-0" onclick="removeQuestion(${qId})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <input type="text" class="form-control border-light mb-2 q-text" placeholder="Question text..." required>
+                <div class="row g-2 mb-2">
+                    <div class="col-6"><input type="text" class="form-control border-light q-opt" placeholder="Option A" required></div>
+                    <div class="col-6"><input type="text" class="form-control border-light q-opt" placeholder="Option B" required></div>
+                    <div class="col-6"><input type="text" class="form-control border-light q-opt" placeholder="Option C" required></div>
+                    <div class="col-6"><input type="text" class="form-control border-light q-opt" placeholder="Option D" required></div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <select class="form-select border-light q-correct" required>
+                            <option value="">Select Correct Ans</option>
+                            <option value="0">Option A</option>
+                            <option value="1">Option B</option>
+                            <option value="2">Option C</option>
+                            <option value="3">Option D</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control border-light q-expl" placeholder="Brief explanation (AI help)...">
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('questionContainer').insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeQuestion(id) {
+        document.getElementById(`q_${id}`).remove();
+    }
+
+    function prepareQuizData() {
+        const quizQuestions = [];
+        document.querySelectorAll('.question-item').forEach(el => {
+            const options = Array.from(el.querySelectorAll('.q-opt')).map(input => input.value);
+            const correctIdx = el.querySelector('.q-correct').value;
+            quizQuestions.push({
+                text: el.querySelector('.q-text').value,
+                options: options,
+                correct_answer: options[correctIdx],
+                explanation: el.querySelector('.q-expl').value
+            });
+        });
+        document.getElementById('questionsInput').value = JSON.stringify(quizQuestions);
+    }
+
+    // Default first question
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('questionContainer')) addQuestion();
+    });
+</script>
+
+<style>
+    .form-control:focus {
+        background: white;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+
+    .op-50 {
+        opacity: 0.5;
+    }
+</style>
+
+<!-- Attendance QR Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-2xl shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Live Classroom QR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="mb-4">
+                    <div class="p-4 bg-white d-inline-block rounded-xl shadow-sm border border-light">
+                        <!-- Simulated QR Code -->
+                        <div
+                            style="width: 200px; height: 200px; background: repeating-conic-gradient(#333 0% 25%, #fff 0% 50%) 50% / 20px 20px;">
+                        </div>
+                    </div>
+                </div>
+                <h4 class="h5 mb-2">Scan to Mark Present</h4>
+                <p class="text-secondary small">Students can scan this from their dashboard to instantly mark presence.
+                </p>
+                <div class="badge bg-success-soft text-success px-4 py-2 mt-2">Active Session</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-lg reveal p-4 p-md-5" id="quizContainer">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">{{ quiz.title }}</h2>
+                    <span class="badge-soft badge-risk-low text-uppercase ls-1 small">{{ quiz.subject }}</span>
+                </div>
+                <div class="text-end">
+                    <span class="text-secondary small">Question <span id="currentQIdx">1</span> of {{
+                        quiz.questions|length }}</span>
+                    <div class="progress mt-2" style="height: 6px; width: 100px;">
+                        <div class="progress-bar bg-primary" id="progressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="mb-5 op-10">
+
+            <div id="questionsArea">
+                {% for question in quiz.questions %}
+                <div class="question-page {{ 'd-none' if not loop.first }}" id="q_page_{{ loop.index0 }}"
+                    data-qid="{{ question.id }}">
+                    <h4 class="mb-4">{{ question.text }}</h4>
+                    <div class="row g-3">
+                        {% for option in question.options %}
+                        <div class="col-12">
+                            <label
+                                class="option-card p-3 d-flex align-items-center border rounded-xl cursor-pointer transition-all">
+                                <input type="radio" name="q_{{ question.id }}" value="{{ option }}" class="d-none">
+                                <div class="op-circle me-3"></div>
+                                <span class="fs-5">{{ option }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-5 d-flex justify-content-between align-items-center">
+                <button class="btn btn-outline px-4 d-none" id="prevBtn" onclick="changeQuestion(-1)">Previous</button>
+                <div class="ms-auto">
+                    <button class="btn btn-primary px-5 py-3 btn-ripple" id="nextBtn" onclick="changeQuestion(1)">Next
+                        Question</button>
+                    <button class="btn btn-success px-5 py-3 btn-ripple d-none" id="submitBtn"
+                        onclick="submitQuiz()">Complete Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result View -->
+        <div class="card border-0 shadow-lg p-5 text-center d-none" id="resultContainer">
+            <div class="mb-4">
+                <div class="display-1 fw-bold text-primary mb-0" id="finalScore">0%</div>
+                <p class="text-secondary">Quiz Completed Successfully!</p>
+            </div>
+
+            <div class="p-4 bg-light rounded-2xl mb-4 text-start">
+                <h5 class="mb-3"><i class="fas fa-brain text-primary me-2"></i>AI Feedback</h5>
+                <p id="aiFeedback" class="mb-0 text-secondary ls-1"></p>
+            </div>
+
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline w-100 py-3">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .option-card:hover {
+        background: var(--primary-glow);
+        border-color: var(--primary) !important;
+    }
+
+    .option-card input:checked+.op-circle {
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+
+    .option-card.active {
+        background: white;
+        border-color: var(--primary) !important;
+        box-shadow: 0 10px 30px rgba(91, 108, 255, 0.1);
+    }
+
+    .op-circle {
+        width: 22px;
+        height: 22px;
+        border: 2px solid #dee2e6;
+        border-radius: 50%;
+        background: white;
+        transition: all 0.2s;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .ls-1 {
+        letter-spacing: 0.5px;
+        line-height: 1.6;
+    }
+</style>
+
+<script>
+    let currentIdx = 0;
+    const total = {{ quiz.questions| length }};
+    const answers = {};
+
+    function updateProgress() {
+        const percent = ((currentIdx + 1) / total) * 100;
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('currentQIdx').innerText = currentIdx + 1;
+    }
+
+    function changeQuestion(dir) {
+        document.getElementById(`q_page_${currentIdx}`).classList.add('d-none');
+        currentIdx += dir;
+        document.getElementById(`q_page_${currentIdx}`).classList.remove('d-none');
+
+        document.getElementById('prevBtn').classList.toggle('d-none', currentIdx === 0);
+        document.getElementById('nextBtn').classList.toggle('d-none', currentIdx === total - 1);
+        document.getElementById('submitBtn').classList.toggle('d-none', currentIdx !== total - 1);
+
+        updateProgress();
+    }
+
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.addEventListener('click', function () {
+            const radio = this.querySelector('input');
+            const qPage = this.closest('.question-page');
+            const qId = qPage.dataset.qid;
+
+            qPage.querySelectorAll('.option-card').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            radio.checked = true;
+            answers[qId] = radio.value;
+        });
+    });
+
+    async function submitQuiz() {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Evaluating...';
+
+        try {
+            const response = await fetch("{{ url_for('student.submit_quiz', id=quiz.id) }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(answers)
+            });
+            const result = await response.json();
+
+            document.getElementById('quizContainer').classList.add('d-none');
+            document.getElementById('resultContainer').classList.remove('d-none');
+            document.getElementById('finalScore').innerText = Math.round(result.score) + '%';
+            document.getElementById('aiFeedback').innerText = result.feedback;
+        } catch (e) {
+            alert("Error submitting quiz. Please try again.");
+            btn.disabled = false;
+        }
+    }
+
+    updateProgress();
+</script>
+{% endblock %}

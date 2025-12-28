@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row align-items-center mb-5 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.5rem;">Hello, <span class="text-gradient">{{
+                current_user.username }}</span></h2>
+        <p class="text-secondary mb-0">Track your progress and get instant AI support whenever you need it.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end d-none d-lg-block">
+        <img src="{{ url_for('static', filename='images/student_3d.png') }}" alt="Student" class="img-fluid float-anim"
+            style="max-height: 120px;">
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Progress Card -->
+    <div class="col-lg-4 reveal" style="transition-delay: 0.1s">
+        <div class="card h-100 border-0 shadow-sm" style="background: var(--gradient-soft)">
+            <h5 class="mb-4">Weekly Progress</h5>
+            <div class="text-center py-3">
+                <div class="position-relative d-inline-block">
+                    <!-- Simple CSS Circle Progress -->
+                    <div class="stat-value text-primary" style="font-size: 3.5rem;">78<span
+                            style="font-size: 1.5rem;">%</span></div>
+                </div>
+                <p class="text-secondary small mt-3">You've completed 4 out of 5 goals this week. Keep going!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Learning Insights -->
+    <div class="col-lg-8 reveal" style="transition-delay: 0.2s">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="d-flex align-items-center mb-4">
+                <i class="fas fa-lightbulb text-accent-teal me-3 fa-lg"></i>
+                <h5 class="mb-0">Learning Insights</h5>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="p-3 rounded-xl" style="background: var(--bg-primary)">
+                        <h6 class="small fw-bold text-primary mb-1">Growth Area</h6>
+                        <p class="small text-secondary mb-0">Your understanding of <strong>Organic Chemistry</strong>
+                            has improved by 15% this month.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 rounded-xl" style="background: var(--bg-primary)">
+                        <h6 class="small fw-bold text-accent-warning mb-1">Next Focus</h6>
+                        <p class="small text-secondary mb-0">Try practicing more <strong>Vector Calculus</strong>
+                            problems to strengthen your grasp.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button class="btn btn-outline btn-sm w-100" onclick="location.href='#doubt-portal'">
+                    <i class="fas fa-comments me-2"></i>Resolve a Doubt Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5 reveal">
+    <div class="col-12">
+        <ul class="nav nav-pills ms-0 gap-2 mb-4" id="studentTabs" role="tablist">
+            <li class="nav-item">
+                <button class="btn btn-outline active" data-bs-toggle="tab" data-bs-target="#assignments"
+                    type="button">Assignments</button>
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-outline" data-bs-toggle="tab" data-bs-target="#quizzes" type="button">Live
+                    Quizzes</button>
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-outline" data-bs-toggle="tab" data-bs-target="#attendance"
+                    type="button">Attendance</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="assignments">
+                <h3 class="h4 mb-4">My Assignments</h3>
+                <div class="row g-4">
+                    {% for assignment in assignments %}
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h5 class="mb-0">{{ assignment.title }}</h5>
+                                <span class="badge-soft badge-risk-low">{{ assignment.subject }}</span>
+                            </div>
+                            <p class="text-secondary small">{{ assignment.rubric[:100] }}...</p>
+                            <div
+                                class="mt-auto pt-3 border-top border-light d-flex justify-content-between align-items-center">
+                                {% if submissions[assignment.id] %}
+                                <span class="badge-soft badge-risk-low"><i
+                                        class="fas fa-check me-1"></i>Submitted</span>
+                                <span class="text-primary fw-bold">{{ submissions[assignment.id].ai_result.score }}/{{
+                                    assignment.max_marks }}</span>
+                                {% else %}
+                                <button class="btn btn-primary btn-sm btn-ripple" data-bs-toggle="modal"
+                                    data-bs-target="#submitModal{{ assignment.id }}">Submit Work</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="quizzes">
+                <h3 class="h4 mb-4">Live Quizzes</h3>
+                <div class="row g-4">
+                    {% for quiz in quizzes %}
+                    <div class="col-md-6">
+                        <div class="card h-100 {{ 'op-50' if attempts[quiz.id] }}">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h5 class="mb-0">{{ quiz.title }}</h5>
+                                <span class="badge-soft badge-risk-low">{{ quiz.subject }}</span>
+                            </div>
+                            <p class="text-secondary small">{{ quiz.questions|length }} interactive questions.</p>
+                            <div
+                                class="mt-auto pt-3 border-top border-light d-flex justify-content-between align-items-center">
+                                {% if attempts[quiz.id] %}
+                                <span class="badge-soft badge-risk-low"><i
+                                        class="fas fa-check-circle me-1"></i>Completed</span>
+                                <span class="text-primary fw-bold">{{ attempts[quiz.id].score|round(1) }}%</span>
+                                {% else %}
+                                <a href="{{ url_for('student.take_quiz', id=quiz.id) }}"
+                                    class="btn btn-primary btn-sm btn-ripple">Take Quiz</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-5">
+                        <p class="text-secondary">No live quizzes available right now.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="attendance">
+                <div class="card border-0 shadow-sm p-4 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-calendar-check fa-3x text-primary op-20"></i>
+                    </div>
+                    <h3 class="h4 mb-3">Today's Attendance</h3>
+                    <p class="text-secondary mb-4">{{ today_date }}</p>
+
+                    {% if attendance_today %}
+                    <div class="alert alert-success d-inline-block px-5 rounded-xl border-0">
+                        <i class="fas fa-check-circle me-2"></i>Status: <strong>{{ attendance_today }}</strong>
+                    </div>
+                    {% else %}
+                    <div class="d-flex gap-2 justify-content-center">
+                        <form action="{{ url_for('attendance.self_checkin') }}" method="POST">
+                            <button type="submit" class="btn btn-primary btn-ripple px-5 py-3">
+                                <i class="fas fa-signature me-2"></i>Self Check-In
+                            </button>
+                        </form>
+                        <form action="{{ url_for('attendance.qr_checkin') }}" method="POST">
+                            <button type="submit" class="btn btn-outline-primary btn-ripple px-5 py-3">
+                                <i class="fas fa-qrcode me-2"></i>Scan Classroom QR
+                            </button>
+                        </form>
+                    </div>
+                    <p class="text-muted small mt-3">Check in to confirm your presence for today's classes.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 class="h4 mb-4 reveal">Active Assignments</h3>
+<div class="row g-4 mb-5">
+    {% for assignment in assignments %}
+    <div class="col-12 reveal">
+        <div class="card p-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-6">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 rounded-circle bg-light">
+                            <i class="fas fa-file-alt text-primary"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ assignment.title }}</h5>
+                            <span class="text-secondary small">{{ assignment.subject }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 text-lg-center">
+                    {% if assignment.id in submissions %}
+                    {% set sub = submissions[assignment.id] %}
+                    <span
+                        class="badge-soft {% if sub.status == 'graded' %}badge-risk-low{% else %}badge-risk-medium{% endif %}">
+                        {{ sub.status|upper }}
+                    </span>
+                    {% else %}
+                    <span class="badge-soft text-muted border border-light">PENDING</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-lg-4 text-lg-end">
+                    {% if assignment.id in submissions %}
+                    {% set sub = submissions[assignment.id] %}
+                    {% if sub.status == 'graded' and sub.ai_result %}
+                    <button class="btn btn-outline btn-sm px-4 btn-ripple" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#feedback{{sub.id}}">
+                        <i class="fas fa-chevron-down me-2"></i>Review AI Feedback
+                    </button>
+                    {% else %}
+                    <span class="text-muted small shimmer p-2 rounded">Analyzing...</span>
+                    {% endif %}
+                    {% else %}
+                    <form action="{{ url_for('student.submit_assignment', id=assignment.id) }}" method="POST"
+                        enctype="multipart/form-data" class="d-flex gap-2 justify-content-lg-end align-items-center">
+                        <label class="btn btn-outline btn-sm mb-0 px-3 cursor-pointer btn-ripple">
+                            <i class="fas fa-upload me-2"></i>Upload
+                            <input type="file" name="file" class="d-none" required
+                                onchange="this.parentElement.innerHTML = '<i class=\'fas fa-check me-2 text-success\'></i>Ready'">
+                        </label>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 btn-ripple">Submit</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if assignment.id in submissions %}
+            {% set sub = submissions[assignment.id] %}
+            {% if sub.status == 'graded' and sub.ai_result %}
+            <div class="collapse" id="feedback{{sub.id}}">
+                <div class="mt-4 pt-4 border-top border-light">
+                    <div class="row g-4">
+                        <div class="col-lg-3 text-center border-end border-light">
+                            <div class="stat-value text-primary mb-0">{{ sub.ai_result.score }}</div>
+                            <div class="text-secondary small">Out of {{ assignment.max_marks }}</div>
+                        </div>
+                        <div class="col-lg-9">
+                            <h6 class="fw-bold mb-3">AI Evaluation Report</h6>
+                            <p class="text-secondary small mb-4">{{ sub.ai_result.get_feedback_dict().get('feedback') }}
+                            </p>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-xl">
+                                        <h6 class="small fw-bold text-success mb-2"><i
+                                                class="fas fa-check-circle me-2"></i>Strengths</h6>
+                                        <ul class="list-unstyled small text-secondary mb-0">
+                                            {% for strength in sub.ai_result.get_feedback_dict().get('strengths', []) %}
+                                            <li>• {{ strength }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-xl">
+                                        <h6 class="small fw-bold text-accent-warning mb-2"><i
+                                                class="fas fa-arrow-up me-2"></i>To Improve</h6>
+                                        <ul class="list-unstyled small text-secondary mb-0">
+                                            {% for imp in sub.ai_result.get_feedback_dict().get('improvements', []) %}
+                                            <li>• {{ imp }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Doubt Resolution Portal Entry (Phase 2) -->
+<div id="doubt-portal" class="card p-5 border-0 shadow-sm text-center reveal" style="background: var(--gradient-soft)">
+    <div class="mb-4">
+        <i class="fas fa-brain fa-3x text-primary op-20"></i>
+    </div>
+    <h3 class="mb-3">Ask AI Doubt Assistant</h3>
+    <p class="text-secondary mb-4 mx-auto" style="max-width: 500px;">Stuck on a concept? Ask our AI teacher for a
+        step-by-step explanation or practical examples.</p>
+    <div class="input-group mx-auto" style="max-width: 600px;">
+        <input type="text" class="form-control border-light p-3 rounded-start-xl"
+            placeholder="e.g. Explain photosynthesis with an example...">
+        <button class="btn btn-primary px-4 rounded-end-xl">Ask Now</button>
+    </div>
+</div>
+
+<script>
+    async function askAIDoubt() {
+        const input = document.querySelector('#doubt-portal input');
+        const question = input.value;
+        const button = document.querySelector('#doubt-portal button');
+
+        if (!question) return;
+
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Thinking...';
+
+        try {
+            const response = await fetch('/student/ask-ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question, context: 'Dashboard Help' })
+            });
+            const data = await response.json();
+
+            if (data.response) {
+                // Display response in a modern way (e.g. update the portal content)
+                const portal = document.getElementById('doubt-portal');
+                portal.innerHTML = `
+                    <div class="mb-4"><i class="fas fa-brain fa-2x text-primary"></i></div>
+                    <h4 class="mb-3">AI Explanation</h4>
+                    <div class="text-start bg-white p-4 rounded-xl shadow-sm mb-4" style="max-height: 400px; overflow-y: auto;">
+                        ${data.response.replace(/\n/g, '<br>')}
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="location.reload()">Ask Another Question</button>
+                `;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            button.innerHTML = 'Error. Try again';
+            button.disabled = false;
+        }
+    }
+
+    document.querySelector('#doubt-portal button').addEventListener('click', askAIDoubt);
+    document.querySelector('#doubt-portal input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') askAIDoubt();
+    });
+</script>
+
+<style>
+    .rounded-start-xl {
+        border-top-left-radius: 1rem !important;
+        border-bottom-left-radius: 1rem !important;
+    }
+
+    .rounded-end-xl {
+        border-top-right-radius: 1rem !important;
+        border-bottom-right-radius: 1rem !important;
+    }
+
+    .op-20 {
+        opacity: 0.2;
+    }
+
+    .text-accent-teal {
+        color: var(--accent-teal);
+    }
+</style>
+{% endblock %}

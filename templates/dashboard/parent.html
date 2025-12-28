@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-5 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.5rem;">Parent <span class="text-gradient">Overview</span>
+        </h2>
+        <p class="text-secondary mb-0">Stay informed about your child's academic journey with clear, meaningful
+            insights.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end d-none d-lg-block">
+        <img src="{{ url_for('static', filename='images/parent_3d.png') }}" alt="Parent" class="img-fluid float-anim"
+            style="max-height: 120px;">
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    {% for record in records %}
+    <div class="col-md-6 col-lg-4 reveal" style="transition-delay: {{ loop.index0 * 0.1 }}s">
+        <div class="card h-100 p-4 border-0 shadow-sm">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="p-3 rounded-circle bg-light">
+                    <i class="fas fa-user-circle fa-lg text-primary"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">{{ record.student.username }}</h5>
+                    <span class="text-secondary small">{{ record.subject }}</span>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl text-center mb-4" style="background: var(--bg-primary)">
+                <div class="text-secondary small mb-2 fw-bold text-uppercase" style="letter-spacing: 0.1em;">Current
+                    Health</div>
+                <div class="stat-value mb-1" style="font-size: 2.5rem; background: transparent; padding: 0;">
+                    {% if record.risk_level == 'low' %}🟢 Stable{% elif record.risk_level == 'medium' %}🟡 Improving{%
+                    else %}🔴 Needs Attention{% endif %}
+                </div>
+                <div class="small mt-2">
+                    <span class="text-secondary">AI Observation:</span>
+                    <span
+                        class="fw-bold {% if record.trend == 'improving' %}text-success{% else %}text-accent-warning{% endif %}">
+                        {{ record.trend|title }}
+                    </span>
+                </div>
+            </div>
+
+            {% if record.risk_level == 'high' %}
+            <div class="p-3 rounded-xl border-start border-4 border-danger" style="background: rgba(239, 68, 68, 0.05)">
+                <p class="small text-danger mb-0">
+                    <i class="fas fa-bell me-2"></i><strong>Priority Alert:</strong> Support may be needed in recent {{
+                    record.subject }} topics.
+                </p>
+            </div>
+            {% else %}
+            <div class="p-3 rounded-xl border-start border-4 border-success"
+                style="background: rgba(16, 185, 129, 0.05)">
+                <p class="small text-success mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Your child is progressing well. No action required.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- AI Reports Section -->
+<div class="row g-4 mb-5">
+    {% for student, report in ai_reports.items() %}
+    <div class="col-12 reveal">
+        <div class="card p-5 border-0 shadow-sm" style="background: var(--gradient-soft)">
+            <h3 class="h4 mb-4">AI Insight for {{ student }}</h3>
+            <p class="text-secondary ls-1">{{ report }}</p>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Student Linking Section -->
+    <div class="col-12 reveal">
+        <div class="card p-5 border-0 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="h4 mb-0">Linked Student Profile</h3>
+                <button class="btn btn-primary btn-ripple" data-bs-toggle="modal" data-bs-target="#linkStudentModal">
+                    <i class="fas fa-link me-2"></i>Link Student
+                </button>
+            </div>
+
+            {% if student_summary %}
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="glass-card p-4 h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-circle bg-primary-soft me-3">
+                                <i class="fas fa-user-graduate text-primary"></i>
+                            </div>
+                            <div>
+                                <h4 class="h6 mb-0">{{ student_summary.name }}'s Academic Profile</h4>
+                                <span class="badge bg-success-soft text-success rounded-pill px-3 mt-1">Status:
+                                    Healthy</span>
+                            </div>
+                        </div>
+                        <p class="text-secondary small">{{ student_summary.ai_insight }}</p>
+                        <div class="row g-2 mt-3">
+                            <div class="col-6">
+                                <div class="p-3 bg-light rounded-xl">
+                                    <div class="small text-secondary mb-1">Attendance</div>
+                                    <div class="h5 mb-0 fw-bold">{{ student_summary.attendance_rate|default(95) }}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-light rounded-xl">
+                                    <div class="small text-secondary mb-1">Status</div>
+                                    <div class="h5 mb-0 fw-bold text-success">Active</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h5 class="small fw-bold text-uppercase text-secondary mb-3">AI Recommendations</h5>
+                            <ul class="list-unstyled mb-0">
+                                {% for step in student_summary.next_steps %}
+                                <li class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-check-circle text-primary me-2 small"></i>
+                                    <span class="small">{{ step }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="glass-card p-5 text-center">
+                <div class="icon-circle bg-primary-soft mx-auto mb-4" style="width: 80px; height: 80px;">
+                    <i class="fas fa-child fa-2x text-primary"></i>
+                </div>
+                <h4 class="h5 mb-2">No individual students linked</h4>
+                <p class="text-secondary mb-4">Link your child's account to receive personalized AI-powered performance
+                    insights.</p>
+                <button class="btn btn-outline-primary px-4" data-bs-toggle="modal"
+                    data-bs-target="#linkStudentModal">Get Started</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Link Student Modal -->
+<div class="modal fade" id="linkStudentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-2xl shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Link Student Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('parent.link_student') }}" method="POST">
+                <div class="modal-body py-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Student Email Address</label>
+                        <input type="email" name="email" class="form-control bg-light border-0 py-3"
+                            placeholder="student@example.com" required>
+                        <div class="form-text small mt-2">We'll send a verification request to this student.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 py-3">Link Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-1 {
+        letter-spacing: 0.3px;
+        line-height: 1.6;
+        font-size: 1.1rem;
+    }
+</style>
+
+<style>
+    .text-success {
+        color: #10B981 !important;
+    }
+
+    .text-danger {
+        color: #EF4444 !important;
+    }
+</style>
+{% endblock %}
