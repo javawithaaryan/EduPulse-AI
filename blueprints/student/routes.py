@@ -52,22 +52,86 @@ def submit_assignment(id):
     flash('Assignment submitted successfully!', 'success')
     return redirect(url_for('student.dashboard'))
 
-@student_bp.route('/ask-ai', methods=['POST'])
+from models import db, Assignment, Submission, Performance, Quiz, Question, QuizAttempt, Attendance, ChatSession, ChatMessage
+from services.vision_service import VisionService
+
+# ... imports ...
+
+@student_bp.route('/chat/new', methods=['POST'])
 @login_required
-def ask_ai():
-    if current_user.role != 'student': return {"error": "Unauthorized"}, 403
+def new_chat():
+    session = ChatSession(user_id=current_user.id)
+    db.session.add(session)
+    db.session.commit()
+    return {"session_id": session.id, "title": session.title}
+
+@student_bp.route('/student/chats')
+@login_required
+def list_chats():
+    sessions = ChatSession.query.filter_by(user_id=current_user.id).order_by(ChatSession.created_at.desc()).all()
+    return {"chats": [s.to_dict() for s in sessions]}
+
+@student_bp.route('/chat/<int:session_id>/history')
+@login_required
+def get_chat_history(session_id):
+    session = ChatSession.query.get_or_404(session_id)
+    if session.user_id != current_user.id: return {"error": "Unauthorized"}, 403
+    
+    messages = session.messages.order_by(ChatMessage.timestamp).all()
+    return {"messages": [m.to_dict() for m in messages]}
+
+@student_bp.route('/chat/<int:session_id>/message', methods=['POST'])
+@login_required
+def send_message(session_id):
+    session = ChatSession.query.get_or_404(session_id)
+    if session.user_id != current_user.id: return {"error": "Unauthorized"}, 403
     
     data = request.get_json()
-    question = data.get('question')
-    context = data.get('context', 'General Education')
+    user_content = data.get('message')
     
-    if not question:
-        return {"error": "Question is required"}, 400
-        
+    if not user_content: return {"error": "Message required"}, 400
+
+    # 1. Save User Message
+    user_msg = ChatMessage(session_id=session.id, role='user', content=user_content)
+    db.session.add(user_msg)
+    db.session.commit()
+
+    # 2. Fetch History
+    history_objs = session.messages.order_by(ChatMessage.timestamp).all()
+    history = [{"role": m.role, "content": m.content} for m in history_objs]
+
+    # 3. Get AI Response
     from services.openai_service import OpenAIService
-    response = OpenAIService.ask_ai(question, context)
-    
-    return {"response": response}
+    ai_response_content = OpenAIService.ask_ai(history, context="Student Dashboard Chat")
+
+    # 4. Save AI Message
+    ai_msg = ChatMessage(session_id=session.id, role='assistant', content=ai_response_content)
+    db.session.add(ai_msg)
+    db.session.commit()
+
+    return {"response": ai_response_content, "message_id": ai_msg.id}
+
+@student_bp.route('/chat/upload', methods=['POST'])
+@login_required
+def upload_chat_file():
+    if 'file' not in request.files: return {"error": "No file"}, 400
+    file = request.files['file']
+    if file.filename == '': return {"error": "No file selected"}, 400
+
+    # Upload to Blob (optional, skipping for speed, just processing)
+    # Extract Text
+    try:
+        # We need to save temporarily to process with Vision (or pass stream if supported)
+        # VisionService.extract_text expects a URL or local path.
+        # For simplicity, let's assuming VisionService deals with it or we mock it for now if needed.
+        # Actually VisionService.extract_text takes image_url.
+        # We should upload first.
+        file_url = BlobService.upload_file(file)
+        extracted_text = VisionService.extract_text(file_url)
+        
+        return {"text": f"I have uploaded a file. Content: {extracted_text}", "url": file_url}
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 @student_bp.route('/quiz/<int:id>/take')
 @login_required

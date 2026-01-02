@@ -280,80 +280,303 @@
     {% endfor %}
 </div>
 
-<!-- Doubt Resolution Portal Entry (Phase 2) -->
-<div id="doubt-portal" class="card p-5 border-0 shadow-sm text-center reveal" style="background: var(--gradient-soft)">
-    <div class="mb-4">
-        <i class="fas fa-brain fa-3x text-primary op-20"></i>
-    </div>
-    <h3 class="mb-3">Ask AI Doubt Assistant</h3>
-    <p class="text-secondary mb-4 mx-auto" style="max-width: 500px;">Stuck on a concept? Ask our AI teacher for a
-        step-by-step explanation or practical examples.</p>
-    <div class="input-group mx-auto" style="max-width: 600px;">
-        <input type="text" class="form-control border-light p-3 rounded-start-xl"
-            placeholder="e.g. Explain photosynthesis with an example...">
-        <button class="btn btn-primary px-4 rounded-end-xl">Ask Now</button>
+<!-- Premium Chat Portal (Phase 5: Search-First) -->
+<div id="chat-interface" class="row mb-5 reveal">
+    <div class="col-12">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+
+        <div class="chat-layout">
+            <!-- Welcome Screen Overlay -->
+            <div id="welcome-screen" class="welcome-screen">
+                <div class="welcome-content">
+                    <h1 class="welcome-title">👋 Hi! What would you like to learn today?</h1>
+                    <div class="welcome-input-wrapper">
+                        <input type="text" class="welcome-input" id="welcome-input" placeholder="Ask your doubt here..."
+                            autofocus>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="chat-sidebar">
+                <button class="new-chat-btn" onclick="startNewChat()">
+                    <i class="fas fa-plus"></i> New Chat
+                </button>
+                <div class="chat-list" id="chat-list">
+                    <!-- Chat items loaded by JS -->
+                </div>
+            </aside>
+
+            <!-- Main Chat Area -->
+            <main class="chat-main">
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will appear here -->
+                </div>
+
+                <!-- Typing Indication -->
+                <div class="typing-indicator" id="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="chat-input-wrapper">
+                    <div class="input-container">
+                        <label class="file-btn" title="Attach file">
+                            <i class="fas fa-paperclip"></i>
+                            <input type="file" id="chat-file-input" hidden onchange="handleFileSelect(this)">
+                        </label>
+
+                        <!-- File Chip -->
+                        <div id="file-chip" class="file-chip">
+                            <i class="fas fa-file-alt"></i>
+                            <span id="file-name">file.pdf</span>
+                            <i class="fas fa-times" onclick="clearFile()"></i>
+                        </div>
+
+                        <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ask anything..."></textarea>
+
+                        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-    async function askAIDoubt() {
-        const input = document.querySelector('#doubt-portal input');
-        const question = input.value;
-        const button = document.querySelector('#doubt-portal button');
+    let currentSessionId = localStorage.getItem('chatSessionId');
+    let selectedFile = null;
 
-        if (!question) return;
+    async function initChat() {
+        await loadChatList();
 
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Thinking...';
-
-        try {
-            const response = await fetch('/student/ask-ai', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: question, context: 'Dashboard Help' })
-            });
-            const data = await response.json();
-
-            if (data.response) {
-                // Display response in a modern way (e.g. update the portal content)
-                const portal = document.getElementById('doubt-portal');
-                portal.innerHTML = `
-                    <div class="mb-4"><i class="fas fa-brain fa-2x text-primary"></i></div>
-                    <h4 class="mb-3">AI Explanation</h4>
-                    <div class="text-start bg-white p-4 rounded-xl shadow-sm mb-4" style="max-height: 400px; overflow-y: auto;">
-                        ${data.response.replace(/\n/g, '<br>')}
-                    </div>
-                    <button class="btn btn-outline btn-sm" onclick="location.reload()">Ask Another Question</button>
-                `;
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            button.innerHTML = 'Error. Try again';
-            button.disabled = false;
+        // Logic: If no session ID or explicitly "new", show welcome screen
+        // If session ID exists, load it and hide welcome screen.
+        if (currentSessionId) {
+            hideWelcomeScreen();
+            await loadHistory(currentSessionId);
+        } else {
+            showWelcomeScreen();
         }
     }
 
-    document.querySelector('#doubt-portal button').addEventListener('click', askAIDoubt);
-    document.querySelector('#doubt-portal input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') askAIDoubt();
+    // --- Search-First Flow Logic ---
+    const welcomeInput = document.getElementById('welcome-input');
+    const welcomeScreen = document.getElementById('welcome-screen');
+
+    welcomeInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter' && welcomeInput.value.trim() !== '') {
+            const initialQuestion = welcomeInput.value.trim();
+            // Transition:
+            // 1. Start new session
+            // 2. Hide welcome screen
+            // 3. Populate main chat with question
+            // 4. Send message
+
+            await startNewChat(false); // don't clear UI yet
+            hideWelcomeScreen();
+
+            // Pass value to main input and send
+            document.getElementById('chat-input').value = initialQuestion;
+            sendMessage();
+            welcomeInput.value = ''; // reset
+        }
     });
+
+    function showWelcomeScreen() {
+        welcomeScreen.classList.remove('hidden');
+        welcomeInput.focus();
+    }
+
+    function hideWelcomeScreen() {
+        welcomeScreen.classList.add('hidden');
+        // focus main input
+        setTimeout(() => document.getElementById('chat-input').focus(), 100);
+    }
+    // --------------------------------
+
+    async function loadChatList() {
+        try {
+            const res = await fetch('/student/student/chats');
+            const data = await res.json();
+            const list = document.getElementById('chat-list');
+            list.innerHTML = '';
+
+            data.chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = `chat-item ${chat.id == currentSessionId ? 'active' : ''}`;
+                item.innerHTML = `<i class="far fa-comment-alt"></i> ${chat.title}`;
+                item.onclick = () => selectChat(chat.id);
+                list.appendChild(item);
+            });
+        } catch (e) {
+            console.error("Failed to load list", e);
+        }
+    }
+
+    async function selectChat(id) {
+        currentSessionId = id;
+        localStorage.setItem('chatSessionId', id);
+        hideWelcomeScreen();
+        await loadHistory(id);
+        loadChatList();
+    }
+
+    async function startNewChat(clearUI = true) {
+        try {
+            const res = await fetch('/student/chat/new', { method: 'POST' });
+            const data = await res.json();
+            currentSessionId = data.session_id;
+            localStorage.setItem('chatSessionId', currentSessionId);
+
+            if (clearUI) {
+                // If explicitly clicked New Chat button, show Welcome Screen again
+                document.getElementById('chat-messages').innerHTML = '';
+                showWelcomeScreen();
+            }
+            loadChatList();
+        } catch (e) {
+            console.error("New chat error", e);
+        }
+    }
+
+    async function loadHistory(id) {
+        try {
+            const res = await fetch(`/student/chat/${id}/history`);
+            if (res.status === 404) {
+                await startNewChat(); return;
+            }
+            const data = await res.json();
+
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+
+            if (data.messages.length === 0) {
+                // Empty chat? Show welcome screen instead of empty list
+                // showWelcomeScreen(); 
+                // Actually, if we selected a chat, we expect history. 
+                // If it's truly empty, maybe just show a subtle "start typing"
+                container.innerHTML = `<div class="text-center text-muted mt-5">Start the conversation...</div>`;
+            }
+
+            data.messages.forEach(msg => {
+                appendMessage(msg.role, msg.content);
+            });
+            scrollToBottom();
+        } catch (e) { console.error(e); }
+    }
+
+    function appendMessage(role, content) {
+        const container = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = `message message-${role === 'user' ? 'user' : 'ai'}`;
+
+        if (role === 'assistant') {
+            div.innerHTML = marked.parse(content);
+        } else {
+            div.textContent = content;
+        }
+
+        container.appendChild(div);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        const container = document.getElementById('chat-messages');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Input Handling
+    const input = document.getElementById('chat-input');
+    input.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        document.getElementById('send-btn').disabled = this.value.trim() === '' && !selectedFile;
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    function handleFileSelect(input) {
+        if (input.files[0]) {
+            selectedFile = input.files[0];
+            document.getElementById('file-name').textContent = selectedFile.name;
+            document.getElementById('file-chip').setAttribute('data-active', 'true');
+        }
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        document.getElementById('chat-file-input').value = '';
+        document.getElementById('file-chip').removeAttribute('data-active');
+    }
+
+    function showTyping(show) {
+        document.getElementById('typing-indicator').style.display = show ? 'flex' : 'none';
+        scrollToBottom();
+    }
+
+    async function sendMessage() {
+        const text = input.value.trim();
+        if (!text && !selectedFile) return;
+
+        // Optimistic UI
+        if (selectedFile) {
+            appendMessage('user', `📎 ${selectedFile.name}`);
+            if (text) appendMessage('user', text);
+        } else {
+            appendMessage('user', text);
+        }
+
+        input.value = '';
+        input.style.height = 'auto';
+        const fileToSend = selectedFile;
+        clearFile();
+
+        showTyping(true);
+
+        try {
+            // Logic: If file, upload first to get context, then send message
+            let contextMsg = text;
+            if (fileToSend) {
+                const formData = new FormData();
+                formData.append('file', fileToSend);
+                const upRes = await fetch('/student/chat/upload', { method: 'POST', body: formData });
+                const upData = await upRes.json();
+                if (upData.text) {
+                    contextMsg = `[User Uploaded File Content]:\n${upData.text}\n\n[User Message]: ${text}`;
+                }
+            }
+
+            const res = await fetch(`/student/chat/${currentSessionId || 0}/message`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: contextMsg })
+            });
+            const data = await res.json();
+
+            showTyping(false);
+            if (data.response) appendMessage('assistant', data.response);
+
+        } catch (e) {
+            showTyping(false);
+            appendMessage('assistant', "Connection error. Please retry.");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initChat);
 </script>
 
 <style>
-    .rounded-start-xl {
-        border-top-left-radius: 1rem !important;
-        border-bottom-left-radius: 1rem !important;
-    }
-
-    .rounded-end-xl {
-        border-top-right-radius: 1rem !important;
-        border-bottom-right-radius: 1rem !important;
-    }
-
-    .op-20 {
-        opacity: 0.2;
-    }
-
     .text-accent-teal {
         color: var(--accent-teal);
     }
