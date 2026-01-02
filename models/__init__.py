@@ -12,3 +12,4 @@ from .attendance import Attendance
 from .library import Resource, LearningProgress, LibraryRecommendation
 from .tasks import Task, Goal
 from .wellbeing import EmotionalCheckin, SupportLog
+from .chat import ChatSession, ChatMessage
