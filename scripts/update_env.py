@@ -3,10 +3,11 @@ import os
 import sys
 
 # New values provided by user
+# NOTE: Replace these with your actual Azure credentials
 NEW_CONF = {
     "AZURE_OPENAI_KEY": "your_azure_openai_key_here",
     "AZURE_OPENAI_ENDPOINT": "your_azure_endpoint_here",
-    "AZURE_OPENAI_DEPLOYMENT_NAME": "gpt-5.2-chat",
+    "AZURE_OPENAI_DEPLOYMENT_NAME": "your_deployment_name_here",
     "AZURE_OPENAI_API_VERSION": "2025-04-01-preview"
 }
 
