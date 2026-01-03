@@ -1,40 +1,84 @@
-# EduPulse AI - Premium Chat Assistant
+# EduPulse AI - Next-Gen Intelligent Education Ecosystem
 
-EduPulse AI is a next-generation education platform featuring a **Premium AI Tutor** capable of answering doubts, grading assignments, and analyzing student performance.
+EduPulse AI is a comprehensive, AI-powered educational platform designed to bridge the gap between Students, Teachers, Parents, and Administrators. It goes beyond simple management to provide intelligent tutoring, automated grading, emotional well-being support, and real-time analytics.
 
-## 🚀 Key Features
+---
 
-### 🧠 Intelligent AI Chat
-- **Search-First Experience**: A clutter-free "Welcome Screen" that focuses on your question first.
-- **Context-Aware**: Remembers your conversation history for seamless follow-up questions.
-- **Smart Formatting**: Renders Markdown (tables, code, lists) beautifully.
+## 🚀 Key Modules & Features
 
-### 🎨 UI/UX
-- **Dark Mode**: A sophisticated `#0f0f11` dark theme designed for focus and reduced eye strain.
-- **Smooth Animations**: Messages fade in softly, and the UI transitions purely from welcome to chat.
-- **Sidebar History**: Easily switch between different study sessions.
+### 🎓 Student Portal
+* **AI Personal Tutor**: Context-aware chat assistant helping with homework and concepts.
+* **Smart Library**: Access to digital resources and study materials.
+* **Task Management**: Track assignments, deadlines, and project status.
+* **Well-being Support**: AI-driven emotional support and mental health check-ins.
 
-### 📎 File Capabilities
-- **Upload & Analyze**: Upload images or PDFs directly in the chat.
-- **Vision Integration**: Extracts text from images to provide relevant answers.
+### 👩‍🏫 Teacher Dashboard
+* **Classroom Management**: Organize classes, students, and schedules.
+* **Automated & AI Grading**: Speed up assessments with AI assistance.
+* **Performance Analytics**: Deep insights into student progress and learning gaps.
+* **Attendance Tracking**: Digital attendance logs and reports.
 
-## 📸 Functionality
+### 👨‍👩‍👧 Parent Connect
+* **Progress Tracking**: Real-time view of child's grades, attendance, and efficienty.
+* **Communication**: Direct channel to teachers and school announcements.
 
-### 1. The Welcome Screen
-*Minimal. Calm. Ready.*
-![Welcome Screen](C:/Users/91799/.gemini/antigravity/brain/8f225e06-5b4d-4ff4-aa3a-e053f717755d/chat_welcome_screen_1767380352931.png)
+### 🛠️ Admin Console
+* **User Management**: Centralized control for Students, Teachers, and Parents.
+* **System Configuration**: Manage platform settings and global announcements.
 
-### 2. The Chat Interface
-*Rich context, clean typography, and helpful AI.*
-![Chat Interface](C:/Users/91799/.gemini/antigravity/brain/8f225e06-5b4d-4ff4-aa3a-e053f717755d/chat_interface_premium_1767380388194.png)
+---
 
-## 🛠️ Tech Stack
-- **Backend**: Flask, Azure OpenAI, Azure Blob Storage
-- **Frontend**: HTML5, CSS3 (Inter Font), Vanilla JS
-- **AI**: GPT-4o (Azure) + Azure AI Vision
+## 🧠 Advanced AI Capabilities
 
-## 🏃‍♂️ How to Run
-1. `pip install -r requirements.txt`
-2. Configure `.env` with Azure Credentials.
-3. `python app.py`
-4. Visit `http://localhost:5000/student/dashboard`
+* **Azure OpenAI Integration**: Powers the intelligent chat and personalized learning suggestions.
+* **Computer Vision**: Scan and digitization of handwritten notes and assignments for analysis.
+* **Sentiment Analysis**: Monitors student well-being through interaction patterns.
+
+---
+
+## 💻 Tech Stack
+
+* **Backend**: Python (Flask)
+* **Database**: SQLite / Azure SQL
+* **Frontend**: HTML5, CSS3, JavaScript (Jinja2 Templates)
+* **AI Services**: Azure OpenAI (GPT-4o), Azure AI Vision
+* **Deployment**: Azure App Service
+
+---
+
+## 🛠️ Installation & Setup
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/javawithaaryan/EduPulse-AI.git
+   cd EduPulse-AI
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure Environment**
+   Create a `.env` file in the root directory and add your Azure credentials:
+   ```env
+   AZURE_OPENAI_KEY=your_key
+   AZURE_OPENAI_ENDPOINT=your_endpoint
+   SECRET_KEY=your_flask_secret
+   # Add other specific database or service keys
+   ```
+
+4. **Initialize Database**
+   The application will automatically create the necessary database tables on the first run.
+
+5. **Run the Application**
+   ```bash
+   python app.py
+   ```
+   Visit `http://localhost:5000` to access the platform.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please fork the repository and submit a pull request.
