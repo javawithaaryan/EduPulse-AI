@@ -320,9 +320,43 @@
                     <div class="typing-dot"></div>
                 </div>
 
+                <!-- Quick Actions Bar -->
+                <div class="quick-actions-bar" id="quick-actions">
+                    <div class="quick-actions-scroll">
+                        <button class="quick-action-btn" onclick="setPromptMode('exam')"
+                            title="Get exam-oriented answer">
+                            <i class="fas fa-graduation-cap"></i> Exam Points
+                        </button>
+                        <button class="quick-action-btn" onclick="setPromptMode('summary')" title="Get a quick summary">
+                            <i class="fas fa-compress-alt"></i> Summary
+                        </button>
+                        <button class="quick-action-btn" onclick="setPromptMode('syllabus')"
+                            title="Explain from syllabus">
+                            <i class="fas fa-book"></i> From Syllabus
+                        </button>
+                        <button class="quick-action-btn active" onclick="setPromptMode(null)" id="btn-normal"
+                            title="Normal chat">
+                            <i class="fas fa-comments"></i> Normal
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Input Area -->
                 <div class="chat-input-wrapper">
                     <div class="input-container">
+                        <!-- Subject Selector -->
+                        <select id="subject-select" class="subject-select" title="Filter by subject">
+                            <option value="">📚 All Subjects</option>
+                            <option value="Mathematics">📐 Mathematics</option>
+                            <option value="Science">🔬 Science</option>
+                            <option value="Physics">⚛️ Physics</option>
+                            <option value="Chemistry">🧪 Chemistry</option>
+                            <option value="Biology">🧬 Biology</option>
+                            <option value="Computer Science">💻 Computer Science</option>
+                            <option value="History">📜 History</option>
+                            <option value="English">📖 English</option>
+                        </select>
+
                         <label class="file-btn" title="Attach file">
                             <i class="fas fa-paperclip"></i>
                             <input type="file" id="chat-file-input" hidden onchange="handleFileSelect(this)">
@@ -335,7 +369,8 @@
                             <i class="fas fa-times" onclick="clearFile()"></i>
                         </div>
 
-                        <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ask anything..."></textarea>
+                        <textarea class="chat-input" id="chat-input" rows="1"
+                            placeholder="Ask your doubt from notes..."></textarea>
 
                         <button class="send-btn" id="send-btn" onclick="sendMessage()">
                             <i class="fas fa-arrow-up"></i>
@@ -351,6 +386,18 @@
 <script>
     let currentSessionId = localStorage.getItem('chatSessionId');
     let selectedFile = null;
+    let currentPromptMode = null; // 'exam', 'summary', 'syllabus', or null
+    let useRAG = true; // Always use RAG for grounded answers
+
+    function setPromptMode(mode) {
+        currentPromptMode = mode;
+        // Update button states
+        document.querySelectorAll('.quick-action-btn').forEach(btn => btn.classList.remove('active'));
+        if (mode === 'exam') document.querySelector('[onclick="setPromptMode(\'exam\')"]').classList.add('active');
+        else if (mode === 'summary') document.querySelector('[onclick="setPromptMode(\'summary\')"]').classList.add('active');
+        else if (mode === 'syllabus') document.querySelector('[onclick="setPromptMode(\'syllabus\')"]').classList.add('active');
+        else document.getElementById('btn-normal').classList.add('active');
+    }
 
     async function initChat() {
         await loadChatList();
@@ -529,6 +576,8 @@
         const text = input.value.trim();
         if (!text && !selectedFile) return;
 
+        const selectedSubject = document.getElementById('subject-select').value;
+
         // Optimistic UI
         if (selectedFile) {
             appendMessage('user', `📎 ${selectedFile.name}`);
@@ -557,20 +606,51 @@
                 }
             }
 
-            const res = await fetch(`/student/chat/${currentSessionId || 0}/message`, {
+            // Use RAG endpoint for grounded answers
+            const endpoint = useRAG
+                ? `/student/chat/rag/${currentSessionId || 0}/message`
+                : `/student/chat/${currentSessionId || 0}/message`;
+
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: contextMsg })
+                body: JSON.stringify({
+                    message: contextMsg,
+                    subject: selectedSubject || null,
+                    prompt_mode: currentPromptMode
+                })
             });
             const data = await res.json();
 
             showTyping(false);
-            if (data.response) appendMessage('assistant', data.response);
+
+            if (data.response) {
+                appendMessage('assistant', data.response);
+
+                // Show citations if available
+                if (data.citations && data.citations.length > 0) {
+                    appendCitations(data.citations);
+                }
+            }
 
         } catch (e) {
             showTyping(false);
             appendMessage('assistant', "Connection error. Please retry.");
         }
+    }
+
+    function appendCitations(citations) {
+        const container = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = 'citations-box';
+        div.innerHTML = `
+            <div class="citations-header"><i class="fas fa-book-open"></i> Sources from your notes</div>
+            <ul class="citations-list">
+                ${citations.slice(0, 3).map(c => `<li>${c.title || c.filepath || 'Document'}</li>`).join('')}
+            </ul>
+        `;
+        container.appendChild(div);
+        scrollToBottom();
     }
 
     document.addEventListener('DOMContentLoaded', initChat);

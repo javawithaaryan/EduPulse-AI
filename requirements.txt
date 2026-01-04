@@ -7,5 +7,6 @@ azure-storage-blob
 azure-ai-vision-imageanalysis
 azure-communication-sms
 azure-core
+azure-search-documents
 requests
 gunicorn

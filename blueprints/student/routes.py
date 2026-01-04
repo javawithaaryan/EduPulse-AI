@@ -111,6 +111,54 @@ def send_message(session_id):
 
     return {"response": ai_response_content, "message_id": ai_msg.id}
 
+@student_bp.route('/chat/rag/<int:session_id>/message', methods=['POST'])
+@login_required
+def send_rag_message(session_id):
+    """RAG-powered chat - answers grounded on academic notes only"""
+    session = ChatSession.query.get_or_404(session_id)
+    if session.user_id != current_user.id: 
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    user_content = data.get('message')
+    subject = data.get('subject')  # Optional subject filter
+    prompt_mode = data.get('prompt_mode')  # e.g., 'exam', 'summary'
+    
+    if not user_content: 
+        return {"error": "Message required"}, 400
+
+    # Apply prompt modifiers
+    if prompt_mode == 'exam':
+        user_content = f"Explain this topic in exam-oriented points using my notes: {user_content}"
+    elif prompt_mode == 'summary':
+        user_content = f"Give a concise summary of this topic from my notes: {user_content}"
+    elif prompt_mode == 'syllabus':
+        user_content = f"Explain this according to my syllabus/notes: {user_content}"
+
+    # 1. Save User Message
+    user_msg = ChatMessage(session_id=session.id, role='user', content=user_content)
+    db.session.add(user_msg)
+    db.session.commit()
+
+    # 2. Fetch History (last 10 messages for context)
+    history_objs = session.messages.order_by(ChatMessage.timestamp).limit(10).all()
+    history = [{"role": m.role, "content": m.content} for m in history_objs[:-1]]  # Exclude current
+
+    # 3. Get RAG Response
+    from services.openai_service import OpenAIService
+    rag_result = OpenAIService.ask_ai_rag(user_content, history, subject)
+
+    # 4. Save AI Message
+    ai_msg = ChatMessage(session_id=session.id, role='assistant', content=rag_result['content'])
+    db.session.add(ai_msg)
+    db.session.commit()
+
+    return {
+        "response": rag_result['content'],
+        "citations": rag_result.get('citations', []),
+        "message_id": ai_msg.id
+    }
+
 @student_bp.route('/chat/upload', methods=['POST'])
 @login_required
 def upload_chat_file():
