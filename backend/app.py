@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, jsonify, abort, send_from_directory
+from jinja2 import ChoiceLoader, FileSystemLoader
 from flask_cors import CORS
 from config import Config
 from models import db, User
@@ -12,6 +13,13 @@ def create_app(config_class=Config):
     app = Flask(__name__, 
                 static_folder=frontend_build, 
                 template_folder=frontend_build)
+    
+    # Hybrid Template Loading: Support both React build (index.html) and Backend Templates (login.html)
+    app.jinja_loader = ChoiceLoader([
+        FileSystemLoader(frontend_build),       # Look in React Build first
+        FileSystemLoader(os.path.join(basedir, 'templates')) # Look in Backend Templates
+    ])
+
     app.config.from_object(config_class)
 
 
