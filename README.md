@@ -28,57 +28,88 @@ EduPulse AI is a comprehensive, AI-powered educational platform designed to brid
 
 ---
 
-## 🧠 Advanced AI Capabilities
-
-* **Azure OpenAI Integration**: Powers the intelligent chat and personalized learning suggestions.
-* **Computer Vision**: Scan and digitization of handwritten notes and assignments for analysis.
-* **Sentiment Analysis**: Monitors student well-being through interaction patterns.
-
----
-
 ## 💻 Tech Stack
 
-* **Backend**: Python (Flask)
+* **Architecture**: Unified Full-Stack Application (Single-Server Deployment)
+* **Backend**: Python (Flask) - Acts as API Server & Static File Server
+* **Frontend**: React + Vite (Served via Flask)
 * **Database**: SQLite / Azure SQL
-* **Frontend**: HTML5, CSS3, JavaScript (Jinja2 Templates)
 * **AI Services**: Azure OpenAI (GPT-4o), Azure AI Vision
 * **Deployment**: Azure App Service
 
 ---
 
+## 📂 Project Structure
+
+```
+EduPulse-AI/
+├── backend/            # Flask API & Server Logic
+│   ├── app.py          # Entry point
+│   ├── blueprints/     # API Route Modules
+│   ├── models/         # Database Models
+│   └── requirements.txt
+├── frontend/           # React + Vite Frontend
+│   ├── src/            # UI Source Code
+│   ├── build/          # Production Build Outputs
+│   └── package.json
+└── README.md
+```
+
+---
+
 ## 🛠️ Installation & Setup
 
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/javawithaaryan/EduPulse-AI.git
-   cd EduPulse-AI
-   ```
+### 1. Requirements
+*   Python 3.10+
+*   Node.js 18+ (for building frontend)
 
-2. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. Setup Backend
+```bash
+git clone https://github.com/javawithaaryan/EduPulse-AI.git
+cd EduPulse-AI/backend
 
-3. **Configure Environment**
-   Create a `.env` file in the root directory and add your Azure credentials:
-   ```env
-   AZURE_OPENAI_KEY=your_key
-   AZURE_OPENAI_ENDPOINT=your_endpoint
-   SECRET_KEY=your_flask_secret
-   # Add other specific database or service keys
-   ```
+# Install Python Dependencies
+pip install -r requirements.txt
 
-4. **Initialize Database**
-   The application will automatically create the necessary database tables on the first run.
+# Configure Environment
+# Create a .env file in 'backend/' with your credentials:
+# AZURE_OPENAI_KEY=your_key
+# AZURE_OPENAI_ENDPOINT=your_endpoint
+# SECRET_KEY=your_flask_secret
+```
 
-5. **Run the Application**
-   ```bash
-   python app.py
-   ```
-   Visit `http://localhost:5000` to access the platform.
+### 3. Build Frontend (One-time)
+*Note: This generates the static files needed for production.*
+```bash
+cd ../frontend
+npm install
+npm run build
+```
+
+---
+
+## ▶️ Running the Application
+
+The entire system (Frontend + Backend) runs on a single server port.
+
+1.  **Start the Server**
+    ```bash
+    # From the 'backend' directory
+    python app.py
+    ```
+
+2.  **Access the Platform**
+    Open your browser and visit:  
+    👉 **http://localhost:5000**
+
+---
+
+## 🧪 Verification
+You can verify the system health and connectivity by visiting:
+*   **Health Check**: `http://localhost:5000/ping`
+*   **Connection Test**: `http://localhost:5000/test`
 
 ---
 
 ## 🤝 Contributing
-
 Contributions are welcome! Please fork the repository and submit a pull request.
