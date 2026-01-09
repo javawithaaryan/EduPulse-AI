@@ -33,7 +33,7 @@ def dashboard():
     ).distinct(Attendance.student_id).count()
     
     quiz_attempts_week = QuizAttempt.query.filter(
-        QuizAttempt.submitted_at >= week_ago
+        QuizAttempt.timestamp >= week_ago
     ).count()
     
     # Well-being Check-ins
@@ -70,8 +70,8 @@ def dashboard():
         week_start = datetime.utcnow() - timedelta(weeks=i+1)
         week_end = datetime.utcnow() - timedelta(weeks=i)
         attempts = QuizAttempt.query.filter(
-            QuizAttempt.submitted_at >= week_start,
-            QuizAttempt.submitted_at < week_end
+            QuizAttempt.timestamp >= week_start,
+            QuizAttempt.timestamp < week_end
         ).all()
         avg = sum(a.score for a in attempts) / len(attempts) if attempts else 0
         quiz_trend.append({
@@ -80,14 +80,27 @@ def dashboard():
         })
     quiz_trend.reverse()
     
+    # Calculate derived stats
+    grading_time_saved = round(total_submissions * 0.25, 1) # Assume 15 mins (0.25 hrs) saved per submission
+    
+    counts = {
+        'users': total_users,
+        'assignments': total_assignments,
+        'quizzes': total_quizzes,
+        'submissions': total_submissions,
+        'active_students': active_students,
+        'checkins': checkins_week,
+        'quiz_attempts': quiz_attempts_week
+    }
+    
+    stats = {
+        'ai_accuracy': f"{round(ai_accuracy, 1)}%",
+        'grading_time_saved': f"{grading_time_saved}h",
+        'assignments_graded': total_submissions
+    }
+    
     return render_template('dashboard/admin.html',
-                         total_users=total_users,
-                         total_assignments=total_assignments,
-                         total_quizzes=total_quizzes,
-                         total_submissions=total_submissions,
-                         active_students=active_students,
-                         quiz_attempts_week=quiz_attempts_week,
-                         checkins_week=checkins_week,
-                         ai_accuracy=round(ai_accuracy, 1),
+                         counts=counts,
+                         stats=stats,
                          weekly_data=weekly_data,
                          quiz_trend=quiz_trend)

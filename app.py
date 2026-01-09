@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from config import Config
 from models import db, User
 from flask_login import LoginManager
@@ -26,7 +26,7 @@ def create_app(config_class=Config):
     from blueprints.admin.routes import admin_bp
     from blueprints.attendance.routes import attendance_bp
 
-    app.register_blueprint(auth_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(teacher_bp, url_prefix='/teacher')
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(parent_bp, url_prefix='/parent')

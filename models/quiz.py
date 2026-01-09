@@ -37,3 +37,4 @@ class QuizAttempt(db.Model):
     feedback = db.Column(db.Text)
     # submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    submitted_at = timestamp # Alias for backward compatibility

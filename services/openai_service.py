@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from openai import AzureOpenAI, APIError
+from openai import AzureOpenAI, OpenAI, APIError
 from config import Config
 
 # Configure logging
@@ -10,6 +10,22 @@ logger = logging.getLogger(__name__)
 
 class OpenAIService:
     _client = None
+    _openai_client = None
+
+    @classmethod
+    def get_openai_client(cls):
+        try:
+            if cls._openai_client is None:
+                api_key = os.getenv("OPENAI_API_KEY")
+                if not api_key or any(p in api_key.lower() for p in ["your_key_here", "your_api_key_here", "placeholder"]):
+                    logger.error("Standard OpenAI API key missing or placeholder used")
+                    return None
+                
+                cls._openai_client = OpenAI(api_key=api_key)
+            return cls._openai_client
+        except Exception as e:
+            logger.error(f"Failed to initialize OpenAI client: {str(e)}")
+            return None
 
     @classmethod
     def get_client(cls):
@@ -285,3 +301,138 @@ Format: Use clean, readable formatting suitable for a chat interface."""
         except Exception as e:
             logger.error(f"Error in generate_parent_report: {str(e)}")
             return "Unable to generate report at this time."
+
+    @staticmethod
+    def generate_question_paper(grade, subject, chapters, difficulty, question_types, blooms_levels):
+        """AI Question Paper Generator - Phase 2"""
+        if Config.USE_MOCK_AI:
+            return {
+                "mcqs": [
+                    {"text": "What is the powerhouse of the cell?", "options": ["Nucleus", "Mitochondria", "Ribosome", "Chloroplast"], "answer": "Mitochondria", "difficulty": "easy", "bloom": "Remember"},
+                    {"text": "Which organelle is responsible for protein synthesis?", "options": ["Golgi", "Ribosome", "Lysosome", "ER"], "answer": "Ribosome", "difficulty": "medium", "bloom": "Understand"}
+                ],
+                "short_answer": [
+                    {"text": "Explain photosynthesis in 50 words.", "marks": 3, "difficulty": "medium", "bloom": "Understand"}
+                ],
+                "long_answer": [
+                    {"text": "Describe the process of mitosis and its importance in cell division.", "marks": 5, "difficulty": "hard", "bloom": "Apply"}
+                ]
+            }
+
+        client = OpenAIService.get_client()
+        if not client:
+            return {"error": "AI Service unavailable"}
+
+        try:
+            prompt = f"""
+            Role: Expert Question Paper Designer
+            Task: Generate a balanced question paper
+            
+            Grade: {grade}
+            Subject: {subject}
+            Chapters: {', '.join(chapters) if chapters else 'All chapters'}
+            Difficulty Distribution: Easy {difficulty.get('easy', 30)}%, Medium {difficulty.get('medium', 50)}%, Hard {difficulty.get('hard', 20)}%
+            Question Types: {json.dumps(question_types)}
+            Bloom's Taxonomy Levels: {', '.join(blooms_levels)}
+            
+            Output: JSON with keys 'mcqs' (array), 'short_answer' (array), 'long_answer' (array).
+            Each question should have: 'text', 'difficulty', 'bloom', and appropriate fields (options/answer for MCQ, marks for others).
+            """
+            response = client.chat.completions.create(
+                model=Config.AZURE_OPENAI_DEPLOYMENT_NAME,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"}
+            )
+            return json.loads(response.choices[0].message.content)
+        except Exception as e:
+            logger.error(f"Error in generate_question_paper: {str(e)}")
+            return {"error": str(e)}
+
+    @staticmethod
+    def analyze_assignment_feedback(assignment_text, subject):
+        """AI Assignment Feedback Assistant - Phase 2"""
+        if Config.USE_MOCK_AI:
+            return {
+                "grammar_issues": [{"line": 12, "issue": "effecting → affecting", "type": "spelling"}],
+                "structure_score": 85,
+                "structure_feedback": "Clear introduction with thesis statement. Conclusion could be stronger.",
+                "syllabus_coverage": {"covered": ["Greenhouse effect", "Human impact"], "missing": ["Mitigation strategies", "International agreements"]},
+                "similarity_risk": "low",
+                "similarity_percent": 8,
+                "suggested_comments": ["Excellent thesis statement!", "Add more about international climate agreements", "Good use of scientific evidence"]
+            }
+
+        client = OpenAIService.get_client()
+        if not client:
+            return {"error": "AI Service unavailable"}
+
+        try:
+            prompt = f"""
+            Role: Expert Academic Reviewer
+            Task: Analyze student assignment and provide constructive feedback suggestions
+            
+            Subject: {subject}
+            Assignment Text: {assignment_text[:3000]}
+            
+            Output: JSON with:
+            - grammar_issues: array of {{line, issue, type}}
+            - structure_score: 0-100
+            - structure_feedback: string
+            - syllabus_coverage: {{covered: [], missing: []}}
+            - similarity_risk: "low"/"medium"/"high"
+            - similarity_percent: number
+            - suggested_comments: array of feedback strings
+            
+            Note: This is AI-assisted feedback. Teacher will review before sending.
+            """
+            response = client.chat.completions.create(
+                model=Config.AZURE_OPENAI_DEPLOYMENT_NAME,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"}
+            )
+            return json.loads(response.choices[0].message.content)
+        except Exception as e:
+            logger.error(f"Error in analyze_assignment_feedback: {str(e)}")
+            return {"error": str(e)}
+
+    @classmethod
+    def ask_tutor(cls, question, student_name, grade, subject, weak_topics):
+        """AI Tutor for school students - Phase 4"""
+        # Prefer Azure OpenAI if configured
+        client = cls.get_client()
+        deployment = getattr(Config, 'AZURE_OPENAI_DEPLOYMENT_NAME', os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME', 'gpt-4o-mini'))
+        
+        # Fallback to standard OpenAI if Azure not available
+        if not client:
+            client = cls.get_openai_client()
+            deployment = "gpt-4o-mini" # Default for standard OpenAI
+
+        if not client:
+            # Fallback to mock if API keys are not set or invalid for easier testing
+            if Config.USE_MOCK_AI or not os.getenv("AZURE_OPENAI_KEY"):
+                return f"[Mock AI Tutor] Hi {student_name}, it seems the AI service is not yet configured. But to answer your question about {subject}: Let's look at this step-by-step..."
+            return "Error: AI Tutor service unavailable. Please check your API keys."
+
+        try:
+            system_prompt = """You are an AI Tutor for school students.
+Explain concepts step by step in simple language.
+Be supportive and encouraging.
+Do not give direct exam answers.
+Help students understand mistakes and concepts.
+Adapt explanations to the student’s grade and subject."""
+
+            user_context = f"Student Name: {student_name}\nGrade: {grade}\nSubject: {subject}\nWeak Topics: {', '.join(weak_topics) if weak_topics else 'None'}"
+            
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Context:\n{user_context}\n\nQuestion: {question}"}
+            ]
+
+            response = client.chat.completions.create(
+                model=deployment,
+                messages=messages
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"Error in ask_tutor: {str(e)}", exc_info=True)
+            return f"I'm having trouble right now. Let's try again."

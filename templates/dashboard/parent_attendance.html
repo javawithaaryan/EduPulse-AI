@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-4 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.2rem;">Attendance <span class="text-gradient">Overview</span>
+        </h2>
+        <p class="text-secondary mb-0">Track your child's attendance this month.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+        <a href="{{ url_for('parent.dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Attendance Rate -->
+    <div class="col-lg-4">
+        <div class="card h-100 p-4 text-center">
+            <div class="mb-3">
+                <div class="display-3 fw-bold text-primary">{{ monthly_rate }}%</div>
+                <div class="text-secondary">Attendance Rate</div>
+            </div>
+            <div class="text-muted">
+                {{ present_days }}/{{ total_days }} days present
+            </div>
+            {% if monthly_rate >= 90 %}
+            <div class="alert alert-success mt-3 mb-0 py-2">
+                <i class="fas fa-check-circle me-1"></i>Excellent attendance!
+            </div>
+            {% elif monthly_rate >= 75 %}
+            <div class="alert alert-warning mt-3 mb-0 py-2">
+                <i class="fas fa-exclamation-circle me-1"></i>Good, but could improve
+            </div>
+            {% else %}
+            <div class="alert alert-danger mt-3 mb-0 py-2">
+                <i class="fas fa-exclamation-triangle me-1"></i>Below 75% - may affect eligibility
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Calendar View -->
+    <div class="col-lg-8">
+        <div class="card h-100 p-4">
+            <h5 class="mb-3">This Month</h5>
+            <div class="d-flex flex-wrap gap-2">
+                {% for day in range(1, 32) %}
+                {% set day_status = namespace(found=false, status='') %}
+                {% for att in attendance_data %}
+                {% if att.day == day %}
+                {% set day_status.found = true %}
+                {% set day_status.status = att.status %}
+                {% endif %}
+                {% endfor %}
+                <div class="attendance-day {% if day_status.status == 'Present' %}bg-success{% elif day_status.status == 'Absent' %}bg-danger{% elif day_status.status == 'Late' %}bg-warning{% else %}bg-light text-muted{% endif %}"
+                    style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; {% if day_status.status == 'Present' or day_status.status == 'Absent' %}color: white;{% endif %}">
+                    {{ day }}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex gap-4 mt-4 small text-muted">
+                <span><span class="badge bg-success me-1">&nbsp;</span>Present</span>
+                <span><span class="badge bg-danger me-1">&nbsp;</span>Absent</span>
+                <span><span class="badge bg-warning me-1">&nbsp;</span>Late</span>
+                <span><span class="badge bg-light text-dark me-1">&nbsp;</span>No Record</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Absence Details -->
+    {% if absence_details %}
+    <div class="col-12">
+        <div class="card p-4">
+            <h5 class="mb-3">Absence Details</h5>
+            {% for absence in absence_details %}
+            <div
+                class="d-flex justify-content-between align-items-center py-3 {% if not loop.last %}border-bottom{% endif %}">
+                <div>
+                    <div class="fw-bold">{{ absence.date }} ({{ absence.day }})</div>
+                    <div class="text-secondary small">Reason: {{ absence.reason }}</div>
+                </div>
+                <span class="badge {% if absence.excused %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if absence.excused %}Excused{% else %}Unexcused{% endif %}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- AI Disclaimer Footer -->
+<div class="text-center text-muted small mt-4 py-3">
+    <i class="fas fa-info-circle me-1"></i>
+    Insights shown here are AI-assisted summaries based on academic records.
+    Final academic decisions are always made by teachers.
+</div>
+{% endblock %}

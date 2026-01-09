@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-4 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.2rem;">{{ student.username if student else 'Child' }}'s <span
+                class="text-gradient">Progress</span></h2>
+        <p class="text-secondary mb-0">Detailed academic performance overview.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+        <a href="{{ url_for('parent.dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Overall Status -->
+    <div class="col-lg-4">
+        <div class="card h-100 p-4 text-center"
+            style="{% if overall_status == 'Doing Well' %}background: rgba(16, 185, 129, 0.1);{% else %}background: rgba(245, 158, 11, 0.1);{% endif %}">
+            <div class="display-6 mb-2">
+                {% if overall_status == 'Doing Well' %}🟢{% else %}🟡{% endif %}
+            </div>
+            <h4 class="{% if overall_status == 'Doing Well' %}text-success{% else %}text-warning{% endif %}">{{
+                overall_status }}</h4>
+            <p class="text-secondary small mb-0">
+                {% if overall_status == 'Doing Well' %}
+                Performing above average in most subjects. Keep encouraging!
+                {% else %}
+                Some subjects need attention. See suggestions below.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-lg-8">
+        <div class="card h-100 p-4">
+            <div class="row g-3">
+                <div class="col-4">
+                    <div class="text-center p-3 bg-light rounded-xl">
+                        <div class="h3 mb-1 text-primary">{{ attendance_rate }}%</div>
+                        <div class="small text-secondary">Attendance</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="text-center p-3 bg-light rounded-xl">
+                        <div class="h3 mb-1 text-success">A+</div>
+                        <div class="small text-secondary">Last Exam</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="text-center p-3 bg-light rounded-xl">
+                        <div class="h3 mb-1">2nd</div>
+                        <div class="small text-secondary">Class Rank</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Progress -->
+    <div class="col-12">
+        <div class="card p-4">
+            <h5 class="mb-4">Subject Progress</h5>
+            {% for subj in subject_progress %}
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>{{ subj.subject }}</span>
+                    <span class="fw-bold">
+                        {{ subj.score }}% {{ subj.trend_icon }}
+                    </span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar {% if subj.status == 'good' %}bg-success{% elif subj.status == 'attention' %}bg-warning{% else %}bg-danger{% endif %}"
+                        style="width: {{ subj.score }}%"></div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-3">No performance data available yet.</p>
+            {% endfor %}
+            <div class="small text-muted mt-3">
+                📈 = Improving &nbsp;&nbsp; → = Stable &nbsp;&nbsp; 📉 = Needs Focus
+            </div>
+        </div>
+    </div>
+
+    <!-- How Can You Help -->
+    <div class="col-12">
+        <div class="card p-4" style="background: var(--primary-glow); border-left: 4px solid var(--primary);">
+            <h5 class="mb-3"><i class="fas fa-lightbulb me-2 text-primary"></i>How Can You Help?</h5>
+            <p class="text-secondary mb-3">Based on recent performance, here's how you can support learning at home:</p>
+            <ul class="list-unstyled mb-0">
+                {% for suggestion in suggestions %}
+                <li class="mb-2">
+                    <i class="fas fa-check-circle text-primary me-2"></i>{{ suggestion }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- AI Disclaimer Footer -->
+<div class="text-center text-muted small mt-4 py-3">
+    <i class="fas fa-info-circle me-1"></i>
+    Insights shown here are AI-assisted summaries based on academic records.
+    Final academic decisions are always made by teachers.
+</div>
+{% endblock %}

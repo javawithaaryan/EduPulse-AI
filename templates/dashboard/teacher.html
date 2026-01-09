@@ -69,6 +69,20 @@
 
 <div class="row mb-4 reveal">
     <div class="col-12">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <a href="{{ url_for('teacher.grading_queue') }}" class="btn btn-outline btn-sm">
+                <i class="fas fa-clipboard-check me-1"></i>Grading Queue
+            </a>
+            <a href="{{ url_for('teacher.question_paper_wizard') }}" class="btn btn-outline btn-sm">
+                <i class="fas fa-file-alt me-1"></i>Question Paper
+            </a>
+            <a href="{{ url_for('teacher.analytics') }}" class="btn btn-outline btn-sm">
+                <i class="fas fa-chart-line me-1"></i>Analytics
+            </a>
+            <a href="{{ url_for('teacher.ai_settings') }}" class="btn btn-outline btn-sm">
+                <i class="fas fa-cog me-1"></i>AI Settings
+            </a>
+        </div>
         <ul class="nav nav-pills ms-0 gap-2" id="dashboardTabs" role="tablist">
             <li class="nav-item">
                 <button class="btn btn-outline active" id="assignments-tab" data-bs-toggle="tab"

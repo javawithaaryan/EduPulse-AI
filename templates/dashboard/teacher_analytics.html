@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-4 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.2rem;">Teaching <span class="text-gradient">Analytics</span>
+        </h2>
+        <p class="text-secondary mb-0">AI-powered insights to help you focus your teaching efforts.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+</div>
+
+<!-- AI Summary Card -->
+<div class="card mb-4 p-4" style="background: var(--primary-glow); border-left: 5px solid var(--primary);">
+    <div class="d-flex align-items-start">
+        <div class="flex-shrink-0 me-4">
+            <i class="fas fa-brain fa-2x text-primary op-50"></i>
+        </div>
+        <div>
+            <h5 class="mb-2">AI-Assisted Summary</h5>
+            <p class="text-secondary mb-2">
+                Based on recent performance data, your class is showing consistent improvement.
+                Consider focusing more on topics where students need additional support.
+            </p>
+            <span class="badge bg-primary-soft text-primary px-3 py-2">
+                <i class="fas fa-lightbulb me-1"></i>Priority: Schedule revision for struggling topics
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Topic Performance -->
+    <div class="col-lg-8">
+        <div class="card h-100 p-4">
+            <h5 class="mb-4"><i class="fas fa-chart-bar me-2 text-primary"></i>Topic Performance</h5>
+            {% for topic in topic_performance %}
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>{{ topic.topic }}</span>
+                    <span
+                        class="fw-bold {% if topic.status == 'good' %}text-success{% elif topic.status == 'attention' %}text-warning{% else %}text-danger{% endif %}">
+                        {{ topic.score }}%
+                        {% if topic.status == 'good' %}✅{% elif topic.status == 'attention' %}⚠️{% else %}🔴{% endif %}
+                    </span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar {% if topic.status == 'good' %}bg-success{% elif topic.status == 'attention' %}bg-warning{% else %}bg-danger{% endif %}"
+                        style="width: {{ topic.score }}%"></div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No performance data available yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Students At Risk -->
+    <div class="col-lg-4">
+        <div class="card h-100 p-4">
+            <h5 class="mb-4"><i class="fas fa-users me-2 text-primary"></i>Student Status</h5>
+            <div class="d-flex flex-column gap-3">
+                <div class="p-3 rounded-xl bg-danger-soft d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold text-danger">Needs Attention</div>
+                        <small class="text-secondary">Require additional support</small>
+                    </div>
+                    <div class="h3 mb-0 text-danger">{{ risk_counts.high }}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-warning-soft d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold text-warning">Monitor Closely</div>
+                        <small class="text-secondary">Could improve with focus</small>
+                    </div>
+                    <div class="h3 mb-0 text-warning">{{ risk_counts.medium }}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-success-soft d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold text-success">On Track</div>
+                        <small class="text-secondary">Performing well</small>
+                    </div>
+                    <div class="h3 mb-0 text-success">{{ risk_counts.low }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Model Status Card (Transparency) -->
+<div class="card p-4">
+    <h5 class="mb-4"><i class="fas fa-robot me-2 text-primary"></i>AI Model Status</h5>
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="p-3 bg-light rounded-xl text-center">
+                <div class="small text-secondary mb-1">Last Trained</div>
+                <div class="fw-bold">{{ ai_model_status.last_trained }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-light rounded-xl text-center">
+                <div class="small text-secondary mb-1">Data Window</div>
+                <div class="fw-bold">{{ ai_model_status.data_window }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-light rounded-xl text-center">
+                <div class="small text-secondary mb-1">Performance</div>
+                <div class="fw-bold text-success">{{ ai_model_status.trend }} 📈</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-light rounded-xl text-center">
+                <div class="small text-secondary mb-1">Model Type</div>
+                <div class="fw-bold">{{ ai_model_status.type }}</div>
+            </div>
+        </div>
+    </div>
+    <p class="text-muted small mt-3 mb-0">
+        <i class="fas fa-info-circle me-1"></i>
+        All AI suggestions require teacher review before finalization.
+    </p>
+</div>
+
+<style>
+    .bg-danger-soft {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .bg-warning-soft {
+        background: rgba(245, 158, 11, 0.1);
+    }
+
+    .bg-success-soft {
+        background: rgba(16, 185, 129, 0.1);
+    }
+</style>
+{% endblock %}

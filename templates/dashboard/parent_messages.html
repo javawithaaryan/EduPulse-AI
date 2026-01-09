@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-4 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.2rem;">Messages & <span
+                class="text-gradient">Communication</span></h2>
+        <p class="text-secondary mb-0">Stay connected with your child's teachers.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+        <a href="{{ url_for('parent.dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="d-flex gap-2 mb-4">
+    <button class="btn btn-primary btn-sm">All</button>
+    <button class="btn btn-outline btn-sm">Feedback</button>
+    <button class="btn btn-outline btn-sm">Announcements</button>
+    <button class="btn btn-outline btn-sm">Meetings</button>
+</div>
+
+<div class="row g-4">
+    {% for msg in messages %}
+    <div class="col-12">
+        <div class="card p-4 {% if not msg.read %}border-start border-4 border-primary{% endif %}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    {% if msg.type == 'announcement' %}
+                    <span class="badge bg-info"><i class="fas fa-bullhorn me-1"></i>Announcement</span>
+                    {% elif msg.type == 'feedback' %}
+                    <span class="badge bg-success"><i class="fas fa-comment me-1"></i>Feedback</span>
+                    {% elif msg.type == 'meeting' %}
+                    <span class="badge bg-warning text-dark"><i class="fas fa-calendar me-1"></i>Meeting</span>
+                    {% endif %}
+                    {% if not msg.read %}
+                    <span class="badge bg-primary">New</span>
+                    {% endif %}
+                </div>
+                <small class="text-muted">
+                    {% if msg.date.date() == today %}
+                    Today, {{ msg.date.strftime('%I:%M %p') }}
+                    {% else %}
+                    {{ msg.date.strftime('%b %d, %Y') }}
+                    {% endif %}
+                </small>
+            </div>
+
+            <h5 class="mb-2">{{ msg.title }}</h5>
+            <p class="text-secondary mb-3">{{ msg.content }}</p>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">From: {{ msg.from }}</small>
+                <div class="d-flex gap-2">
+                    {% if msg.type == 'feedback' %}
+                    <button class="btn btn-outline btn-sm">Reply</button>
+                    {% endif %}
+                    {% if msg.type == 'meeting' %}
+                    <button class="btn btn-outline btn-sm">Add to Calendar</button>
+                    <button class="btn btn-outline btn-sm">Reschedule Request</button>
+                    {% endif %}
+                    <button class="btn btn-outline btn-sm">View Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="card p-5 text-center">
+            <div class="mb-3">
+                <i class="fas fa-inbox fa-3x text-muted op-50"></i>
+            </div>
+            <h4>No messages yet</h4>
+            <p class="text-secondary mb-0">Messages from teachers will appear here.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- AI Disclaimer Footer -->
+<div class="text-center text-muted small mt-4 py-3">
+    <i class="fas fa-info-circle me-1"></i>
+    Insights shown here are AI-assisted summaries based on academic records.
+    Final academic decisions are always made by teachers.
+</div>
+{% endblock %}

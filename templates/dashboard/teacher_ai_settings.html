@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-4 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.2rem;">AI Assistance <span
+                class="text-gradient">Controls</span></h2>
+        <p class="text-secondary mb-0">Configure how AI assists you with grading and feedback.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="card p-4 mb-4">
+    <form action="{{ url_for('teacher.save_ai_settings') }}" method="POST">
+        <!-- Enable AI -->
+        <div class="mb-4">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="ai_enabled" id="aiEnabled" {% if ai_enabled
+                    %}checked{% endif %} style="width: 3em; height: 1.5em;">
+                <label class="form-check-label h5 mb-0 ms-2" for="aiEnabled">Enable AI grading suggestions</label>
+            </div>
+            <p class="text-secondary small mt-2 mb-0">When enabled, AI will analyze submissions and provide grade
+                suggestions for your review.</p>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Confidence Threshold -->
+        <div class="mb-4">
+            <label class="form-label fw-bold">AI Confidence Threshold</label>
+            <p class="text-secondary small mb-3">AI suggestions are shown only when confidence meets or exceeds this
+                threshold.</p>
+
+            <div class="d-flex align-items-center gap-3">
+                <input type="range" class="form-range flex-grow-1" name="ai_threshold" id="aiThreshold" min="50"
+                    max="100" value="{{ ai_threshold }}" oninput="updateThresholdDisplay(this.value)">
+                <div class="badge bg-primary px-3 py-2 fs-6" id="thresholdDisplay">{{ ai_threshold }}%</div>
+            </div>
+
+            <div class="d-flex justify-content-between text-muted small mt-1">
+                <span>50%</span>
+                <span>100%</span>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Low Confidence Behavior -->
+        <div class="mb-4">
+            <label class="form-label fw-bold">Behavior when confidence is below threshold</label>
+            <div class="mt-2">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="low_confidence_behavior" value="manual"
+                        id="behaviorManual" {% if low_confidence_behavior=='manual' %}checked{% endif %}>
+                    <label class="form-check-label" for="behaviorManual">
+                        <strong>Require full manual grading</strong>
+                        <br><small class="text-secondary">AI suggestions hidden; you grade from scratch</small>
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="low_confidence_behavior" value="explanation_only"
+                        id="behaviorExplanation" {% if low_confidence_behavior=='explanation_only' %}checked{% endif %}>
+                    <label class="form-check-label" for="behaviorExplanation">
+                        <strong>Show AI explanation only (no auto score)</strong>
+                        <br><small class="text-secondary">See AI analysis but no suggested score</small>
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="low_confidence_behavior" value="hide"
+                        id="behaviorHide" {% if low_confidence_behavior=='hide' %}checked{% endif %}>
+                    <label class="form-check-label" for="behaviorHide">
+                        <strong>Hide AI suggestions completely</strong>
+                        <br><small class="text-secondary">No AI assistance for low-confidence submissions</small>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Save Button -->
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save me-2"></i>Save Preferences
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Info Card -->
+<div class="alert alert-info border-0" style="background: rgba(59, 130, 246, 0.1);">
+    <h6 class="mb-2"><i class="fas fa-shield-alt me-2"></i>Responsible AI Commitment</h6>
+    <ul class="mb-0 small">
+        <li>AI suggestions are <strong>never final</strong> – your approval is always required</li>
+        <li>Override reasons are logged internally to improve future suggestions</li>
+        <li>Student grades are only visible after your explicit approval</li>
+        <li>AI confidence scores help you prioritize which submissions need closer review</li>
+    </ul>
+</div>
+
+<script>
+    function updateThresholdDisplay(value) {
+        document.getElementById('thresholdDisplay').textContent = value + '%';
+    }
+</script>
+{% endblock %}

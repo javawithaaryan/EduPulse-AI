@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-4 reveal">
+    <div class="col-lg-8">
+        <h2 class="hero-headline mb-1" style="font-size: 2.2rem;">Question Paper <span
+                class="text-gradient">Generator</span></h2>
+        <p class="text-secondary mb-0">AI-assisted question paper creation with Bloom's taxonomy alignment.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+</div>
+
+<!-- Step Progress -->
+<div class="d-flex justify-content-center mb-5">
+    <div class="d-flex align-items-center gap-3">
+        <div class="step-indicator active" data-step="1">
+            <span class="step-number">1</span>
+            <span class="step-label">Class & Subject</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-indicator" data-step="2">
+            <span class="step-number">2</span>
+            <span class="step-label">Chapters</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-indicator" data-step="3">
+            <span class="step-number">3</span>
+            <span class="step-label">Difficulty</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-indicator" data-step="4">
+            <span class="step-number">4</span>
+            <span class="step-label">Generate</span>
+        </div>
+    </div>
+</div>
+
+<!-- Step 1: Class & Subject -->
+<div class="wizard-step active" id="step1">
+    <div class="card p-4">
+        <h5 class="mb-4">Select Class</h5>
+        <div class="row g-2 mb-4">
+            {% for grade in ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] %}
+            <div class="col-auto">
+                <input type="radio" class="btn-check" name="grade" id="grade{{ loop.index }}" value="{{ grade }}">
+                <label class="btn btn-outline" for="grade{{ loop.index }}">{{ grade }}</label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h5 class="mb-4">Select Subject</h5>
+        <div class="row g-3">
+            {% for subj in [('Science', 'flask'), ('Mathematics', 'calculator'), ('English', 'book'), ('History',
+            'landmark'), ('Geography', 'globe'), ('Computer Science', 'laptop-code')] %}
+            <div class="col-md-4">
+                <input type="radio" class="btn-check" name="subject" id="subj{{ loop.index }}" value="{{ subj[0] }}">
+                <label class="btn btn-outline w-100 py-3" for="subj{{ loop.index }}">
+                    <i class="fas fa-{{ subj[1] }} me-2"></i>{{ subj[0] }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+            <button class="btn btn-primary" onclick="nextStep(2)">Next: Chapters →</button>
+        </div>
+    </div>
+</div>
+
+<!-- Step 2: Chapters -->
+<div class="wizard-step" id="step2">
+    <div class="card p-4">
+        <h5 class="mb-4">Select Chapters to Include</h5>
+        <div class="row g-2" id="chapterList">
+            {% for ch in range(1, 11) %}
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="chapters" value="Chapter {{ ch }}"
+                        id="ch{{ ch }}">
+                    <label class="form-check-label" for="ch{{ ch }}">Chapter {{ ch }}: Sample Topic {{ ch }}</label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button class="btn btn-outline" onclick="prevStep(1)">← Back</button>
+            <button class="btn btn-primary" onclick="nextStep(3)">Next: Difficulty →</button>
+        </div>
+    </div>
+</div>
+
+<!-- Step 3: Difficulty & Pattern -->
+<div class="wizard-step" id="step3">
+    <div class="card p-4">
+        <h5 class="mb-4">Difficulty Distribution</h5>
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <label class="form-label">Easy</label>
+                <input type="range" class="form-range" name="easy" min="0" max="100" value="30"
+                    oninput="updateDiffLabel(this, 'easyLabel')">
+                <span id="easyLabel" class="badge bg-success">30%</span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Medium</label>
+                <input type="range" class="form-range" name="medium" min="0" max="100" value="50"
+                    oninput="updateDiffLabel(this, 'mediumLabel')">
+                <span id="mediumLabel" class="badge bg-warning">50%</span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Hard</label>
+                <input type="range" class="form-range" name="hard" min="0" max="100" value="20"
+                    oninput="updateDiffLabel(this, 'hardLabel')">
+                <span id="hardLabel" class="badge bg-danger">20%</span>
+            </div>
+        </div>
+
+        <h5 class="mb-3">Bloom's Taxonomy Levels</h5>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            {% for bloom in ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'] %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="blooms" value="{{ bloom }}"
+                    id="bloom{{ loop.index }}" {% if loop.index <=4 %}checked{% endif %}>
+                <label class="form-check-label" for="bloom{{ loop.index }}">{{ bloom }}</label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h5 class="mb-3">Question Types</h5>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small text-secondary">MCQs</label>
+                <input type="number" class="form-control" name="mcq_count" value="10" min="0">
+                <small class="text-muted">× 1 mark each</small>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-secondary">Short Answer</label>
+                <input type="number" class="form-control" name="short_count" value="5" min="0">
+                <small class="text-muted">× 3 marks each</small>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-secondary">Long Answer</label>
+                <input type="number" class="form-control" name="long_count" value="3" min="0">
+                <small class="text-muted">× 5 marks each</small>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-secondary">Case-Based</label>
+                <input type="number" class="form-control" name="case_count" value="1" min="0">
+                <small class="text-muted">× 10 marks each</small>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button class="btn btn-outline" onclick="prevStep(2)">← Back</button>
+            <button class="btn btn-primary" onclick="generatePaper()">
+                <i class="fas fa-robot me-2"></i>Generate Paper
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Step 4: Generated Paper -->
+<div class="wizard-step" id="step4">
+    <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0">Generated Question Paper</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline btn-sm" onclick="exportPaper('pdf')">
+                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="exportPaper('word')">
+                    <i class="fas fa-file-word me-1"></i>Export Word
+                </button>
+            </div>
+        </div>
+
+        <div id="paperContent">
+            <!-- Generated questions will appear here -->
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <p class="text-secondary">Generating AI-assisted questions...</p>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button class="btn btn-outline" onclick="prevStep(3)">← Back to Edit</button>
+            <button class="btn btn-success">
+                <i class="fas fa-save me-2"></i>Save Paper
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .wizard-step {
+        display: none;
+    }
+
+    .wizard-step.active {
+        display: block;
+    }
+
+    .step-indicator {
+        text-align: center;
+        opacity: 0.5;
+    }
+
+    .step-indicator.active {
+        opacity: 1;
+    }
+
+    .step-indicator.completed {
+        opacity: 1;
+        color: var(--primary);
+    }
+
+    .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    .step-label {
+        display: block;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+
+    .step-line {
+        width: 40px;
+        height: 2px;
+        background: #ddd;
+    }
+</style>
+
+<script>
+    let currentStep = 1;
+
+    function nextStep(step) {
+        document.getElementById('step' + currentStep).classList.remove('active');
+        document.getElementById('step' + step).classList.add('active');
+        document.querySelector(`.step-indicator[data-step="${currentStep}"]`).classList.add('completed');
+        document.querySelector(`.step-indicator[data-step="${step}"]`).classList.add('active');
+        currentStep = step;
+    }
+
+    function prevStep(step) {
+        document.getElementById('step' + currentStep).classList.remove('active');
+        document.getElementById('step' + step).classList.add('active');
+        currentStep = step;
+    }
+
+    function updateDiffLabel(input, labelId) {
+        document.getElementById(labelId).textContent = input.value + '%';
+    }
+
+    function generatePaper() {
+        nextStep(4);
+
+        const data = {
+            grade: document.querySelector('input[name="grade"]:checked')?.value || 'Grade 9',
+            subject: document.querySelector('input[name="subject"]:checked')?.value || 'Science',
+            chapters: Array.from(document.querySelectorAll('input[name="chapters"]:checked')).map(c => c.value),
+            difficulty: {
+                easy: parseInt(document.querySelector('input[name="easy"]').value),
+                medium: parseInt(document.querySelector('input[name="medium"]').value),
+                hard: parseInt(document.querySelector('input[name="hard"]').value)
+            },
+            blooms: Array.from(document.querySelectorAll('input[name="blooms"]:checked')).map(b => b.value),
+            question_types: {
+                mcq: parseInt(document.querySelector('input[name="mcq_count"]').value),
+                short: parseInt(document.querySelector('input[name="short_count"]').value),
+                long: parseInt(document.querySelector('input[name="long_count"]').value),
+                case: parseInt(document.querySelector('input[name="case_count"]').value)
+            }
+        };
+
+        fetch('{{ url_for("teacher.generate_question_paper") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(r => r.json())
+            .then(result => {
+                displayPaper(result.questions, data);
+            })
+            .catch(err => {
+                document.getElementById('paperContent').innerHTML = '<div class="alert alert-danger">Error generating paper. Please try again.</div>';
+            });
+    }
+
+    function displayPaper(questions, config) {
+        let html = `<div class="mb-4 pb-3 border-bottom"><strong>${config.grade} | ${config.subject}</strong></div>`;
+
+        if (questions.mcqs) {
+            html += `<h6 class="text-primary mb-3">Section A: Multiple Choice Questions</h6>`;
+            questions.mcqs.forEach((q, i) => {
+                html += `<div class="mb-3 p-3 bg-light rounded"><strong>${i + 1}.</strong> ${q.text}`;
+                if (q.options) {
+                    html += `<div class="row mt-2">`;
+                    q.options.forEach((opt, j) => {
+                        html += `<div class="col-6">${String.fromCharCode(97 + j)}) ${opt}</div>`;
+                    });
+                    html += `</div>`;
+                }
+                html += `<div class="mt-2"><span class="badge bg-secondary">${q.difficulty}</span> <span class="badge bg-info">${q.bloom}</span></div></div>`;
+            });
+        }
+
+        if (questions.short_answer) {
+            html += `<h6 class="text-primary mb-3 mt-4">Section B: Short Answer Questions</h6>`;
+            questions.short_answer.forEach((q, i) => {
+                html += `<div class="mb-3 p-3 bg-light rounded"><strong>${i + 1}.</strong> ${q.text} <span class="float-end text-muted">[${q.marks} marks]</span></div>`;
+            });
+        }
+
+        if (questions.long_answer) {
+            html += `<h6 class="text-primary mb-3 mt-4">Section C: Long Answer Questions</h6>`;
+            questions.long_answer.forEach((q, i) => {
+                html += `<div class="mb-3 p-3 bg-light rounded"><strong>${i + 1}.</strong> ${q.text} <span class="float-end text-muted">[${q.marks} marks]</span></div>`;
+            });
+        }
+
+        document.getElementById('paperContent').innerHTML = html;
+    }
+
+    function exportPaper(format) {
+        alert('Export to ' + format.toUpperCase() + ' - Feature coming soon!');
+    }
+</script>
+{% endblock %}

@@ -255,3 +255,30 @@ def learning_path():
                          path_data=path_data,
                          subjects=subjects,
                          current_subject=subject)
+
+@student_bp.route('/api/ask-ai', methods=['POST'])
+@login_required
+def ask_ai_tutor():
+    data = request.get_json()
+    if not data:
+        return {"error": "Invalid payload"}, 400
+    
+    question = data.get('question')
+    student_name = data.get('studentName', getattr(current_user, 'name', 'Student'))
+    grade = data.get('grade', '7')
+    subject = data.get('subject', 'General')
+    weak_topics = data.get('weakTopics', [])
+
+    if not question:
+        return {"error": "Question is required"}, 400
+
+    from services.openai_service import OpenAIService
+    response = OpenAIService.ask_tutor(
+        question=question,
+        student_name=student_name,
+        grade=grade,
+        subject=subject,
+        weak_topics=weak_topics
+    )
+
+    return {"response": response}

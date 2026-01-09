@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row align-items-center mb-5 reveal">
+<div class="row align-items-center mb-4 reveal">
     <div class="col-lg-8">
         <h2 class="hero-headline mb-1" style="font-size: 2.5rem;">Parent <span class="text-gradient">Overview</span>
         </h2>
@@ -13,6 +13,25 @@
             style="max-height: 120px;">
     </div>
 </div>
+
+<!-- Quick Navigation -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+    {% if student_summary %}
+    <a href="{{ url_for('parent.child_progress') }}" class="btn btn-outline btn-sm">
+        <i class="fas fa-chart-line me-1"></i>Progress
+    </a>
+    {% endif %}
+    <a href="{{ url_for('parent.attendance') }}" class="btn btn-outline btn-sm">
+        <i class="fas fa-calendar-check me-1"></i>Attendance
+    </a>
+    <a href="{{ url_for('parent.fees') }}" class="btn btn-outline btn-sm">
+        <i class="fas fa-receipt me-1"></i>Fees
+    </a>
+    <a href="{{ url_for('parent.messages') }}" class="btn btn-outline btn-sm">
+        <i class="fas fa-envelope me-1"></i>Messages
+    </a>
+</div>
+
 
 <div class="row g-4 mb-5">
     {% for record in records %}
@@ -187,4 +206,11 @@
         color: #EF4444 !important;
     }
 </style>
+
+<!-- AI Disclaimer Footer (Responsible AI) -->
+<div class="text-center text-muted small mt-4 py-3 border-top">
+    <i class="fas fa-info-circle me-1"></i>
+    Insights shown here are AI-assisted summaries based on academic records.
+    Final academic decisions are always made by teachers.
+</div>
 {% endblock %}

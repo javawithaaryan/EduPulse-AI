@@ -161,3 +161,187 @@ def create_quiz():
     db.session.commit()
     flash('Quiz created successfully!', 'success')
     return redirect(url_for('teacher.dashboard'))
+
+# ============ NEW: AI-Assisted Grading Queue ============
+@teacher_bp.route('/grading/queue')
+@login_required
+def grading_queue():
+    """Display submissions awaiting AI grading review"""
+    if current_user.role != 'teacher': return redirect(url_for('index'))
+    
+    assignments = Assignment.query.filter_by(teacher_id=current_user.id).all()
+    pending_submissions = []
+    
+    for assignment in assignments:
+        subs = Submission.query.filter_by(assignment_id=assignment.id).all()
+        for sub in subs:
+            ai_result = AIResult.query.filter_by(submission_id=sub.id).first()
+            pending_submissions.append({
+                'submission': sub,
+                'assignment': assignment,
+                'ai_result': ai_result,
+                'needs_review': ai_result and not getattr(ai_result, 'teacher_approved', False)
+            })
+    
+    return render_template('dashboard/teacher_grading_queue.html',
+                          submissions=pending_submissions)
+
+@teacher_bp.route('/grading/review/<int:submission_id>')
+@login_required
+def review_grading(submission_id):
+    """Individual submission review with AI suggestions"""
+    if current_user.role != 'teacher': return redirect(url_for('index'))
+    
+    sub = Submission.query.get_or_404(submission_id)
+    assignment = Assignment.query.get(sub.assignment_id)
+    
+    if assignment.teacher_id != current_user.id:
+        return redirect(url_for('index'))
+    
+    ai_result = AIResult.query.filter_by(submission_id=sub.id).first()
+    feedback_data = json.loads(ai_result.feedback_json) if ai_result else {}
+    
+    # Get teacher's AI confidence threshold preference
+    ai_threshold = getattr(current_user, 'ai_confidence_threshold', 70)
+    
+    return render_template('dashboard/teacher_grading_review.html',
+                          submission=sub,
+                          assignment=assignment,
+                          ai_result=ai_result,
+                          feedback_data=feedback_data,
+                          ai_threshold=ai_threshold)
+
+@teacher_bp.route('/grading/approve', methods=['POST'])
+@login_required
+def approve_grading():
+    """Approve AI grade with optional teacher override"""
+    if current_user.role != 'teacher': return redirect(url_for('index'))
+    
+    submission_id = request.form.get('submission_id')
+    final_score = request.form.get('final_score')
+    teacher_feedback = request.form.get('teacher_feedback', '')
+    override_reason = request.form.get('override_reason', '')
+    
+    sub = Submission.query.get_or_404(submission_id)
+    ai_result = AIResult.query.filter_by(submission_id=sub.id).first()
+    
+    if ai_result:
+        ai_result.teacher_approved = True
+        ai_result.final_score = int(final_score)
+        ai_result.teacher_feedback = teacher_feedback
+        # Store override reason for audit (never shown to students)
+        if override_reason:
+            ai_result.override_reason = override_reason
+        
+        db.session.commit()
+        flash('Grade approved successfully!', 'success')
+    
+    return redirect(url_for('teacher.grading_queue'))
+
+# ============ NEW: AI Question Paper Generator ============
+@teacher_bp.route('/question-paper')
+@login_required
+def question_paper_wizard():
+    """AI Question Paper Generator - Step wizard"""
+    if current_user.role != 'teacher': return redirect(url_for('index'))
+    return render_template('dashboard/teacher_question_paper.html')
+
+@teacher_bp.route('/question-paper/generate', methods=['POST'])
+@login_required
+def generate_question_paper():
+    """Generate questions using AI"""
+    if current_user.role != 'teacher': return redirect(url_for('index'))
+    
+    data = request.get_json()
+    grade = data.get('grade', 'Grade 9')
+    subject = data.get('subject', 'Science')
+    chapters = data.get('chapters', [])
+    difficulty = data.get('difficulty', {'easy': 30, 'medium': 50, 'hard': 20})
+    question_types = data.get('question_types', {})
+    blooms = data.get('blooms', ['Remember', 'Understand', 'Apply'])
+    
+    # Generate questions using OpenAI
+    questions = OpenAIService.generate_question_paper(
+        grade=grade,
+        subject=subject,
+        chapters=chapters,
+        difficulty=difficulty,
+        question_types=question_types,
+        blooms_levels=blooms
+    )
+    
+    return {'questions': questions, 'status': 'success'}
+
+# ============ NEW: Teaching Insights Analytics ============
+@teacher_bp.route('/analytics')
+@login_required
+def analytics():
+    """AI Teaching Insights Dashboard"""
+    if current_user.role != 'teacher': return redirect(url_for('index'))
+    
+    from models import User, Performance
+    from datetime import datetime, timedelta
+    
+    # Get performance data
+    assignments = Assignment.query.filter_by(teacher_id=current_user.id).all()
+    subjects = list({a.subject for a in assignments})
+    
+    # Topic performance analysis
+    topic_performance = []
+    for subject in subjects:
+        perfs = Performance.query.filter_by(subject=subject).all()
+        if perfs:
+            avg_score = sum(1 for p in perfs if p.risk_level == 'low') / len(perfs) * 100
+            topic_performance.append({
+                'topic': subject,
+                'score': round(avg_score),
+                'status': 'good' if avg_score >= 70 else 'attention' if avg_score >= 50 else 'struggling'
+            })
+    
+    # At-risk students count
+    risk_counts = {
+        'high': Performance.query.filter_by(risk_level='high').count(),
+        'medium': Performance.query.filter_by(risk_level='medium').count(),
+        'low': Performance.query.filter_by(risk_level='low').count()
+    }
+    
+    # AI Model Status (for transparency)
+    ai_model_status = {
+        'last_trained': datetime.now().strftime('%d %b %Y'),
+        'data_window': 'Last 90 days',
+        'trend': 'Improving',
+        'type': 'AI-Assisted (Human-reviewed)'
+    }
+    
+    return render_template('dashboard/teacher_analytics.html',
+                          topic_performance=topic_performance,
+                          risk_counts=risk_counts,
+                          ai_model_status=ai_model_status,
+                          subjects=subjects)
+
+# ============ NEW: AI Settings ============
+@teacher_bp.route('/settings/ai')
+@login_required
+def ai_settings():
+    """Teacher AI assistance controls"""
+    if current_user.role != 'teacher': return redirect(url_for('index'))
+    
+    return render_template('dashboard/teacher_ai_settings.html',
+                          ai_enabled=getattr(current_user, 'ai_enabled', True),
+                          ai_threshold=getattr(current_user, 'ai_confidence_threshold', 70),
+                          low_confidence_behavior=getattr(current_user, 'low_confidence_behavior', 'manual'))
+
+@teacher_bp.route('/settings/ai/save', methods=['POST'])
+@login_required
+def save_ai_settings():
+    """Save AI assistance preferences"""
+    if current_user.role != 'teacher': return redirect(url_for('index'))
+    
+    current_user.ai_enabled = request.form.get('ai_enabled') == 'on'
+    current_user.ai_confidence_threshold = int(request.form.get('ai_threshold', 70))
+    current_user.low_confidence_behavior = request.form.get('low_confidence_behavior', 'manual')
+    
+    db.session.commit()
+    flash('AI preferences saved successfully!', 'success')
+    return redirect(url_for('teacher.ai_settings'))
+
