@@ -41,19 +41,19 @@ export function ParentSignIn() {
 
             <div className="space-y-3">
               <button
-                onClick={() => handleChildSelect('Emma Rodriguez')}
+                onClick={() => handleChildSelect('Bhoomi Rathore')}
                 className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all text-left"
               >
-                <div className="font-medium text-gray-900">Emma Rodriguez</div>
-                <div className="text-sm text-gray-600">Grade 7 - Section A</div>
+                <div className="font-medium text-gray-900">Bhoomi Rathore</div>
+                <div className="text-sm text-gray-600">Grade 10 - Section A</div>
               </button>
 
               <button
-                onClick={() => handleChildSelect('Lucas Rodriguez')}
+                onClick={() => handleChildSelect('Sneha Patak')}
                 className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all text-left"
               >
-                <div className="font-medium text-gray-900">Lucas Rodriguez</div>
-                <div className="text-sm text-gray-600">Grade 4 - Section B</div>
+                <div className="font-medium text-gray-900">Sneha Patak</div>
+                <div className="text-sm text-gray-600">Grade 8 - Section B</div>
               </button>
             </div>
           </div>

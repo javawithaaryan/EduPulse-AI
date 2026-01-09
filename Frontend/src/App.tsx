@@ -11,6 +11,8 @@ import { StudentLayout } from './components/StudentLayout';
 import { AskAITutorPage } from './components/AskAITutorPage';
 import { StudentDashboard } from './components/StudentDashboard';
 import ConnectionTest from './components/ConnectionTest';
+import { AIPlayground } from './components/AIPlayground';
+
 
 function RequireAuth({ children, role }: { children: JSX.Element; role: Role }) {
   const { user } = useApp();
@@ -35,6 +37,8 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<HomePage />} />
         <Route path="/test" element={<ConnectionTest />} />
+        <Route path="/ai-playground" element={<AIPlayground />} />
+
 
         {/* Login Routes */}
         <Route path="/login/teacher" element={<TeacherSignIn />} />

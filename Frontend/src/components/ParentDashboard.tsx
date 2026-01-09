@@ -1,13 +1,45 @@
 import { GraduationCap, LogOut, TrendingUp, AlertCircle, BookOpen, Lightbulb, Calendar, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { predictStudentRisk } from '../api';
 
 export function ParentDashboard() {
   const { user, logout } = useApp();
   const userName = user?.name || 'Parent';
 
+  const students = [
+    { id: 'BHOOMI-001', name: 'Bhoomi Rathore', grade: 'Grade 10', section: 'A' },
+    { id: 'SNEHA-001', name: 'Sneha Patak', grade: 'Grade 8', section: 'B' }
+  ];
+
+  const [currentStudent, setCurrentStudent] = useState(students[0]);
+  const [riskData, setRiskData] = useState<any>(null);
+
+  useEffect(() => {
+    // Fetch real ML risk prediction for selected student
+    const fetchRisk = async () => {
+      try {
+        // Mock data inputs slightly different for each to show variety
+        const mockScores = currentStudent.id === 'BHOOMI-001' ? [8, 9, 9, 8.5] : [7, 6, 7.5, 7];
+        const mockAttendance = currentStudent.id === 'BHOOMI-001' ? 96 : 88;
+
+        const data = await predictStudentRisk({
+          student_id: currentStudent.id,
+          recent_scores: mockScores,
+          attendance_rate: mockAttendance
+        });
+        setRiskData(data);
+      } catch (e) {
+        console.error("Failed to fetch risk", e);
+      }
+    };
+    fetchRisk();
+  }, [currentStudent]);
+
+
   // Calm, slower animations for parent view
-  const containerVariants = {
+  const containerVariants: any = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -18,7 +50,7 @@ export function ParentDashboard() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: any = {
     hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
@@ -43,9 +75,19 @@ export function ParentDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">{userName}</div>
-              <div className="text-xs text-gray-600">Viewing: Emma Rodriguez</div>
+            <div className="text-right flex items-center gap-3">
+              <div>
+                <div className="text-sm font-medium text-gray-900">{userName}</div>
+                <select
+                  className="text-xs text-gray-600 bg-transparent border-none focus:ring-0 cursor-pointer"
+                  value={currentStudent.id}
+                  onChange={(e) => setCurrentStudent(students.find(s => s.id === e.target.value) || students[0])}
+                >
+                  {students.map(s => (
+                    <option key={s.id} value={s.id}>Viewing: {s.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <button
               onClick={logout}
@@ -73,8 +115,8 @@ export function ParentDashboard() {
               👧
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Emma's Learning Journey</h1>
-              <p className="text-gray-600">Grade 7 • Section A • St. Xavier's High School</p>
+              <h1 className="text-2xl font-semibold text-gray-900">{currentStudent.name}'s Learning Journey</h1>
+              <p className="text-gray-600">{currentStudent.grade} • Section {currentStudent.section} • St. Xavier's High School</p>
             </div>
           </div>
 
@@ -134,7 +176,7 @@ export function ParentDashboard() {
                   <div>
                     <h3 className="font-medium text-blue-900">Excellent Performance in History</h3>
                     <p className="text-sm text-blue-800 mt-1">
-                      Emma scored 95% in "Ancient Civilizations". The AI noted her strong essay writing skills.
+                      {currentStudent.name.split(' ')[0]} scored 95% in "Ancient Civilizations". The AI noted her strong essay writing skills.
                     </p>
                   </div>
                 </div>
@@ -159,17 +201,39 @@ export function ParentDashboard() {
                 Areas for Focus (AI Insights)
               </h2>
               <div className="space-y-4">
-                <div className="p-4 border border-amber-200 rounded-lg">
-                  <h3 className="font-medium text-amber-900 mb-2">Mathematics: Quadratic Equations</h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Emma is struggling slightly with word problems involving quadratics. The AI has recommended 2 practice sessions.
-                  </p>
-                  <div className="bg-amber-50 p-3 rounded text-sm text-amber-800">
-                    <strong>How you can help:</strong> Ask her to explain real-world examples of curves (like throwing a ball) to verify understanding.
+                {riskData ? (
+                  <div className={`p-4 border rounded-lg ${riskData.risk_level === 'high' ? 'border-red-200 bg-red-50' :
+                    riskData.risk_level === 'medium' ? 'border-amber-200 bg-amber-50' :
+                      'border-green-200 bg-green-50'
+                    }`}>
+                    <h3 className="font-medium text-gray-900 mb-2 capitalize">
+                      Overall Risk Level: <span className={
+                        riskData.risk_level === 'high' ? 'text-red-700' :
+                          riskData.risk_level === 'medium' ? 'text-amber-700' :
+                            'text-green-700'
+                      }>{riskData.risk_level}</span>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Startling Trend: <strong>{riskData.trend}</strong>.
+                      Confidence: {(riskData.confidence * 100).toFixed(0)}%.
+                    </p>
+                    <div className="text-sm text-gray-800">
+                      <strong>AI Recommendation:</strong> {
+                        riskData.risk_level === 'high' ? "Immediate intervention required. Schedule meeting with teacher." :
+                          riskData.risk_level === 'medium' ? "Monitor upcoming quiz grades closely. Encourage extra practice." :
+                            "Performance is stable. Keep up the good encouragement!"
+                      }
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-4 border border-gray-200 rounded-lg animate-pulse bg-gray-50">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                )}
               </div>
             </motion.div>
+
           </div>
 
           <div className="space-y-6">

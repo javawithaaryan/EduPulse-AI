@@ -15,44 +15,44 @@ from flask import jsonify
 
 teacher_bp = Blueprint('teacher', __name__)
 
-@teacher_bp.route('/dashboard')
-@login_required
-def dashboard():
-    if current_user.role != 'teacher': return redirect(url_for('index'))
-    assignments = Assignment.query.filter_by(teacher_id=current_user.id).all()
-    quizzes = Quiz.query.filter_by(teacher_id=current_user.id).all()
-    
-    # New: Fetch students for attendance (in a real app, filter by class)
-    from models import User, Attendance, Performance
-    from datetime import datetime
-    today = datetime.utcnow().date()
-    students = User.query.filter_by(role='student').all()
-    
-    for s in students:
-        att = Attendance.query.filter_by(student_id=s.id, date=today).first()
-        s.attendance_today = att.status if att else None
-
-    # Generate Class Insights
-    subjects = {a.subject for a in assignments}
-    performances = Performance.query.filter(Performance.subject.in_(subjects)).all()
-    
-    perf_summary = []
-    for p in performances:
-        perf_summary.append({
-            "student": p.student.username,
-            "subject": p.subject,
-            "risk": p.risk_level,
-            "trend": p.trend
-        })
-    
-    ai_insights = OpenAIService.generate_class_insights(json.dumps(perf_summary))
-    
-    return render_template('dashboard/teacher.html', 
-                          assignments=assignments, 
-                          quizzes=quizzes, 
-                          students=students,
-                          ai_insights=ai_insights,
-                          today_date=today.strftime('%B %d, %Y'))
+# @teacher_bp.route('/dashboard')
+# @login_required
+# def dashboard():
+#     if current_user.role != 'teacher': return redirect(url_for('index'))
+#     assignments = Assignment.query.filter_by(teacher_id=current_user.id).all()
+#     quizzes = Quiz.query.filter_by(teacher_id=current_user.id).all()
+#     
+#     # New: Fetch students for attendance (in a real app, filter by class)
+#     from models import User, Attendance, Performance
+#     from datetime import datetime
+#     today = datetime.utcnow().date()
+#     students = User.query.filter_by(role='student').all()
+#     
+#     for s in students:
+#         att = Attendance.query.filter_by(student_id=s.id, date=today).first()
+#         s.attendance_today = att.status if att else None
+# 
+#     # Generate Class Insights
+#     subjects = {a.subject for a in assignments}
+#     performances = Performance.query.filter(Performance.subject.in_(subjects)).all()
+#     
+#     perf_summary = []
+#     for p in performances:
+#         perf_summary.append({
+#             "student": p.student.username,
+#             "subject": p.subject,
+#             "risk": p.risk_level,
+#             "trend": p.trend
+#         })
+#     
+#     ai_insights = OpenAIService.generate_class_insights(json.dumps(perf_summary))
+#     
+#     return render_template('dashboard/teacher.html', 
+#                           assignments=assignments, 
+#                           quizzes=quizzes, 
+#                           students=students,
+#                           ai_insights=ai_insights,
+#                           today_date=today.strftime('%B %d, %Y'))
 
 @teacher_bp.route('/assignment/new', methods=['POST'])
 @login_required

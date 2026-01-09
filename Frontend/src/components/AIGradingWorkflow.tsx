@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, Loader2, CheckCircle2, AlertTriangle, TrendingDown, Users, Lightbulb, Edit3, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { analyzeImage } from '../api';
 
 interface AIGradingWorkflowProps {
   onBack: () => void;
@@ -11,6 +12,9 @@ type WorkflowState = 'upload' | 'processing' | 'complete';
 export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
   const [state, setState] = useState<WorkflowState>('upload');
   const [progress, setProgress] = useState(0);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+
 
   useEffect(() => {
     if (state === 'processing') {
@@ -28,17 +32,53 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
     }
   }, [state]);
 
-  const handleFileUpload = () => {
-    setState('processing');
+  // Real AI Analysis
+  const handleRealFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setState('processing');
+      setAnalyzing(true);
+      try {
+        // Simulate progress for UX while analyzing
+        let p = 0;
+        const interval = setInterval(() => {
+          p = Math.min(p + 5, 90);
+          setProgress(p);
+        }, 200);
+
+        const result = await analyzeImage(e.target.files[0]);
+
+        clearInterval(interval);
+        setProgress(100);
+        setAnalysisResult(result);
+        setState('complete');
+      } catch (err) {
+        console.error("Grading failed", err);
+        // Fallback or error state could go here, for now reset
+        setState('upload');
+      } finally {
+        setAnalyzing(false);
+      }
+    }
   };
 
   const handleUseDemoData = () => {
+    // Legacy mock flow
     setState('processing');
+    let p = 0;
+    const interval = setInterval(() => {
+      p += 5;
+      setProgress(p);
+      if (p >= 100) {
+        clearInterval(interval);
+        setState('complete');
+      }
+    }, 100);
   };
+
 
   if (state === 'upload') {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
@@ -56,36 +96,38 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
         <h2 className="text-2xl font-semibold text-gray-900 mb-6">Upload Assessment</h2>
 
         {/* Upload Area */}
-        <motion.div 
-          whileHover={{ scale: 1.01, borderColor: '#3b82f6' }}
-          whileTap={{ scale: 0.99 }}
-          className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-500 transition-all cursor-pointer mb-6 group"
-        >
+        <div className="relative group">
+          <input
+            type="file"
+            onChange={handleRealFileUpload}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            accept="image/*"
+          />
           <motion.div
-            whileHover={{ y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Upload className="w-16 h-16 text-gray-400 group-hover:text-blue-500 mx-auto mb-4 transition-colors" />
-          </motion.div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Drop files here or click to upload
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Supports PDF, JPG, PNG, CSV files
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleFileUpload}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors relative overflow-hidden group"
+            whileHover={{ scale: 1.01, borderColor: '#3b82f6' }}
+            whileTap={{ scale: 0.99 }}
+            className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-500 transition-all cursor-pointer mb-6 group-hover:bg-blue-50"
           >
             <motion.div
-              className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10"
-              transition={{ duration: 0.3 }}
-            />
-            Select Files
-          </motion.button>
-        </motion.div>
+              whileHover={{ y: -5 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Upload className="w-16 h-16 text-gray-400 group-hover:text-blue-500 mx-auto mb-4 transition-colors" />
+            </motion.div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Drop answer sheets here or click to scan
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Supports Images (JPG, PNG) for AI OCR
+            </p>
+            <div
+              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg group-hover:bg-blue-700 transition-colors relative overflow-hidden"
+            >
+              Select Files to Grade
+            </div>
+          </motion.div>
+        </div>
+
 
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
@@ -106,7 +148,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
         </motion.button>
 
         {/* What happens next */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -126,7 +168,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
 
   if (state === 'processing') {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
@@ -168,9 +210,9 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
 
           {/* Processing Steps */}
           <div className="mt-8 text-left space-y-3">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -10 }}
-              animate={{ 
+              animate={{
                 opacity: progress > 20 ? 1 : 0.4,
                 x: 0
               }}
@@ -184,9 +226,9 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
               </motion.div>
               <span className="text-sm">Scanning answer sheets</span>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -10 }}
-              animate={{ 
+              animate={{
                 opacity: progress > 40 ? 1 : 0.4,
                 x: 0
               }}
@@ -201,9 +243,9 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
               </motion.div>
               <span className="text-sm">Grading submissions</span>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -10 }}
-              animate={{ 
+              animate={{
                 opacity: progress > 60 ? 1 : 0.4,
                 x: 0
               }}
@@ -218,9 +260,9 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
               </motion.div>
               <span className="text-sm">Identifying learning gaps</span>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -10 }}
-              animate={{ 
+              animate={{
                 opacity: progress > 80 ? 1 : 0.4,
                 x: 0
               }}
@@ -258,7 +300,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
   };
 
   return (
-    <motion.div 
+    <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -275,7 +317,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
       </motion.button>
 
       {/* Success Banner */}
-      <motion.div 
+      <motion.div
         variants={itemVariants}
         className="bg-green-50 border border-green-200 rounded-xl p-6"
       >
@@ -295,7 +337,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
       </motion.div>
 
       {/* AI Class Summary */}
-      <motion.div 
+      <motion.div
         variants={itemVariants}
         className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
       >
@@ -303,13 +345,13 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
           <AlertTriangle className="w-5 h-5 text-blue-600" />
           AI Class Summary
         </h3>
-        
+
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05, y: -4 }}
             className="bg-green-50 border border-green-200 rounded-lg p-4"
           >
-            <motion.div 
+            <motion.div
               className="text-3xl font-semibold text-green-700"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -319,11 +361,11 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
             </motion.div>
             <div className="text-sm text-green-900">Average Score</div>
           </motion.div>
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05, y: -4 }}
             className="bg-red-50 border border-red-200 rounded-lg p-4"
           >
-            <motion.div 
+            <motion.div
               className="text-3xl font-semibold text-red-700"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -333,11 +375,11 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
             </motion.div>
             <div className="text-sm text-red-900">Need Attention</div>
           </motion.div>
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05, y: -4 }}
             className="bg-blue-50 border border-blue-200 rounded-lg p-4"
           >
-            <motion.div 
+            <motion.div
               className="text-3xl font-semibold text-blue-700"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -357,7 +399,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
           </h4>
           <div className="space-y-2">
             {['Quadratic Equations (Standard Form)', 'Factoring Trinomials', 'Word Problems (Application)'].map((concept, index) => (
-              <motion.div 
+              <motion.div
                 key={concept}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -374,7 +416,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
       </motion.div>
 
       {/* AI Suggested Remedial Plan */}
-      <motion.div 
+      <motion.div
         variants={itemVariants}
         className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
       >
@@ -384,7 +426,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
         </h3>
 
         <div className="space-y-4">
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.01 }}
             className="border border-gray-200 rounded-lg p-4"
           >
@@ -396,7 +438,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
             </ul>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.01 }}
             className="border border-gray-200 rounded-lg p-4"
           >
@@ -419,7 +461,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.01 }}
             className="border border-gray-200 rounded-lg p-4"
           >
@@ -428,7 +470,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
           </motion.div>
         </div>
 
-        <motion.button 
+        <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="mt-4 w-full bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition-colors font-medium relative overflow-hidden group"
@@ -442,7 +484,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
       </motion.div>
 
       {/* AI-Drafted Student Feedback */}
-      <motion.div 
+      <motion.div
         variants={itemVariants}
         className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
       >
@@ -458,7 +500,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
             { name: 'Emma Rodriguez', score: '68/100', feedback: 'Emma, you\'re making progress! Your algebraic manipulation skills are improving. Spend extra time on completing the square method and practice more application problems to build confidence.' },
             { name: 'Marcus Williams', score: '89/100', feedback: 'Excellent work, Marcus! You demonstrated mastery of most concepts. To reach the next level, focus on optimizing your problem-solving approach for word problems and check your work carefully.' }
           ].map((student, index) => (
-            <motion.div 
+            <motion.div
               key={student.name}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -474,7 +516,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
                 {student.feedback}
               </p>
               <div className="flex gap-2">
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
@@ -482,7 +524,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
                   <Edit3 className="w-3 h-3" />
                   Edit
                 </motion.button>
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1"
@@ -500,7 +542,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
         </div>
 
         <div className="mt-4 flex gap-3">
-          <motion.button 
+          <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium relative overflow-hidden group"
@@ -511,7 +553,7 @@ export function AIGradingWorkflow({ onBack }: AIGradingWorkflowProps) {
             />
             Send All Feedback
           </motion.button>
-          <motion.button 
+          <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="flex-1 border-2 border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"

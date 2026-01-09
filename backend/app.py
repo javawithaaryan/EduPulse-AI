@@ -1,6 +1,16 @@
 from flask import Flask, render_template, redirect, url_for, jsonify, abort, send_from_directory
 from jinja2 import ChoiceLoader, FileSystemLoader
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+from dotenv import load_dotenv
+import os
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
+
+
+
 from config import Config
 from models import db, User
 from flask_login import LoginManager
@@ -53,6 +63,18 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(attendance_bp, url_prefix='/attendance')
     app.register_blueprint(api_bp, url_prefix='/api')
+    
+    from blueprints.vision import vision_bp
+    app.register_blueprint(vision_bp, url_prefix='/api/vision')
+
+    from blueprints.openai import openai_bp
+    app.register_blueprint(openai_bp, url_prefix='/api/openai')
+    
+    from blueprints.ml import ml_bp
+    app.register_blueprint(ml_bp, url_prefix='/api/ml')
+    
+    
+    
     
     from blueprints.library.routes import library_bp
     app.register_blueprint(library_bp, url_prefix='/library')

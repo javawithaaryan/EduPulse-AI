@@ -1,7 +1,9 @@
 import { GraduationCap, LogOut, Target, BookOpen, Lightbulb, TrendingUp, AlertCircle, CheckCircle2, ArrowRight, Upload, FileText, Brain, Sparkles, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { askAI } from '../api';
+
 
 // Mock Streaming Text Component
 function StreamingText({ text }: { text: string }) {
@@ -21,26 +23,41 @@ function StreamingText({ text }: { text: string }) {
 }
 
 function AskAIChat({ userName, itemVariants }: { userName: string, itemVariants: any }) {
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([
-    { role: 'ai', text: `Hi ${userName.split(' ')[0]}! I'm here to help with your studies. Stuck on a problem?` }
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai' | 'assistant'; text: string }[]>([
+    { role: 'assistant', text: `Hi ${userName.split(' ')[0]}! I'm here to help with your studies. Stuck on a problem?` }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isTyping) return;
 
     const userMsg = input;
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI thinking and then streaming response
-    setTimeout(() => {
+    try {
+      // Prepare history for context (last 5 messages)
+      const history = messages.slice(-5).map(m => ({
+        role: m.role === 'ai' ? 'assistant' : m.role,
+        content: m.text
+      }));
+
+      const data = await askAI(userMsg, history);
+      setMessages(prev => [...prev, { role: 'assistant', text: data.response }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'assistant', text: "Sorry, I'm having trouble connecting to the AI right now." }]);
+    } finally {
       setIsTyping(false);
-      setMessages(prev => [...prev, { role: 'ai', text: "That's a great question! Let's break it down. First, recall the quadratic formula..." }]);
-    }, 1500);
+    }
   };
+
 
   return (
     <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8 hover:shadow-md transition-shadow">

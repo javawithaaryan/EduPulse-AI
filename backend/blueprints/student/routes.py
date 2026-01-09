@@ -7,25 +7,25 @@ from datetime import datetime
 
 student_bp = Blueprint('student', __name__)
 
-@student_bp.route('/dashboard')
-@login_required
-def dashboard():
-    if current_user.role != 'student': return redirect(url_for('index'))
-    # Show all assignments (submitted and not submitted can be filtered in template)
-    assignments = Assignment.query.all()
-    my_submissions = {s.assignment_id: s for s in Submission.query.filter_by(student_id=current_user.id).all()}
-    
-    quizzes = Quiz.query.all()
-    today = datetime.utcnow().date()
-    attendance_today = Attendance.query.filter_by(student_id=current_user.id, date=today).first()
-    
-    return render_template('dashboard/student.html', 
-                          assignments=assignments, 
-                          submissions=my_submissions, 
-                          quizzes=quizzes, 
-                          attempts={},  # Removed to fix SQL error
-                          attendance_today=attendance_today.status if attendance_today else None,
-                          today_date=today.strftime('%B %d, %Y'))
+# @student_bp.route('/dashboard')
+# @login_required
+# def dashboard():
+#     if current_user.role != 'student': return redirect(url_for('index'))
+#     # Show all assignments (submitted and not submitted can be filtered in template)
+#     assignments = Assignment.query.all()
+#     my_submissions = {s.assignment_id: s for s in Submission.query.filter_by(student_id=current_user.id).all()}
+#     
+#     quizzes = Quiz.query.all()
+#     today = datetime.utcnow().date()
+#     attendance_today = Attendance.query.filter_by(student_id=current_user.id, date=today).first()
+#     
+#     return render_template('dashboard/student.html', 
+#                           assignments=assignments, 
+#                           submissions=my_submissions, 
+#                           quizzes=quizzes, 
+#                           attempts={},  # Removed to fix SQL error
+#                           attendance_today=attendance_today.status if attendance_today else None,
+#                           today_date=today.strftime('%B %d, %Y'))
 
 @student_bp.route('/assignment/<int:id>/submit', methods=['POST'])
 @login_required

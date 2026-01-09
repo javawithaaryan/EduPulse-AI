@@ -1,115 +1,90 @@
-# EduPulse AI - Next-Gen Intelligent Education Ecosystem
+# EduPulse AI Platform 🎓🚀
 
-EduPulse AI is a comprehensive, AI-powered educational platform designed to bridge the gap between Students, Teachers, Parents, and Administrators. It goes beyond simple management to provide intelligent tutoring, automated grading, emotional well-being support, and real-time analytics.
+**Smarter Learning. Calmer Classrooms.**
 
----
+EduPulse is a next-generation education platform that seamlessly integrates advanced AI to personalize learning for students, automate grading for teachers, and provide real-time peace of mind for parents.
 
-## 🚀 Key Modules & Features
-
-### 🎓 Student Portal
-* **AI Personal Tutor**: Context-aware chat assistant helping with homework and concepts.
-* **Smart Library**: Access to digital resources and study materials.
-* **Task Management**: Track assignments, deadlines, and project status.
-* **Well-being Support**: AI-driven emotional support and mental health check-ins.
-
-### 👩‍🏫 Teacher Dashboard
-* **Classroom Management**: Organize classes, students, and schedules.
-* **Automated & AI Grading**: Speed up assessments with AI assistance.
-* **Performance Analytics**: Deep insights into student progress and learning gaps.
-* **Attendance Tracking**: Digital attendance logs and reports.
-
-### 👨‍👩‍👧 Parent Connect
-* **Progress Tracking**: Real-time view of child's grades, attendance, and efficienty.
-* **Communication**: Direct channel to teachers and school announcements.
-
-### 🛠️ Admin Console
-* **User Management**: Centralized control for Students, Teachers, and Parents.
-* **System Configuration**: Manage platform settings and global announcements.
+Built with **React (Frontend)**, **Flask (Backend)**, and powered by **Microsoft Azure AI**.
 
 ---
 
-## 💻 Tech Stack
+## 🌟 Key Features
 
-* **Architecture**: Unified Full-Stack Application (Single-Server Deployment)
-* **Backend**: Python (Flask) - Acts as API Server & Static File Server
-* **Frontend**: React + Vite (Served via Flask)
-* **Database**: SQLite / Azure SQL
-* **AI Services**: Azure OpenAI (GPT-4o), Azure AI Vision
-* **Deployment**: Azure App Service
+### 1. 🧠 AI-Powered Student Dashboard
+*   **Personal AI Tutor (Azure OpenAI)**: Students can chat with an AI tutor that understands their context, helps with homework, and explains complex topics in simple terms.
+*   **Adaptive Learning Paths**: Content adjusts real-time based on student performance.
+*   **Interactive Quizzes**: Instant feedback and score tracking.
+
+### 2. 📝 AI Grading for Teachers (Azure Vision)
+*   **One-Click Grading**: Upload photos of handwritten assignments or standard test sheets.
+*   **AI Vision Analysis**: Uses Azure AI Vision to scan and digitize content.
+*   **Automated Feedback**: Generates detailed, constructive feedback for each student instantly.
+*   **Class Analytics**: "Heatmaps" of student performance to identify struggling students early.
+
+### 3. 👨‍👩‍👧‍👧 Connected Parent Dashboard (Azure ML)
+*   **Real-Time Risk Prediction**: Uses Azure Machine Learning to analyze grades and attendance, predicting "At-Risk" status before it becomes a problem.
+*   **Multi-Child Support**: Seamlessly switch between children (e.g., Bhoomi, Sneha) to view individual progress.
+*   **Actionable Insights**: Plain-English summaries of how a child is doing, avoiding confusing jargon.
+
+---
+
+## 🛠️ Technology Stack
+
+*   **Frontend**: React, TypeScript, Tailwind CSS, Framer Motion (for smooth, premium animations).
+*   **Backend**: Python Flask, SQLAlchemy (SQLite/PostgreSQL).
+*   **AI Services**:
+    *   **Azure OpenAI Service**: GPT-4 for Chat and Reasoning.
+    *   **Azure AI Vision**: OCR and Image Analysis.
+    *   **Azure Machine Learning**: Predictive Analytics.
+
+---
+
+## 🚀 Quick Start (Deployment)
+
+We've made it incredibly easy to run EduPulse locally.
+
+1.  **Prerequisites**:
+    *   Node.js & npm installed.
+    *   Python 3.10+ installed.
+    *   Azure API Keys configured in `backend/.env`.
+
+2.  **One-Click Launch (Windows)**:
+    *   Simply double-click the **`start_edupulse.bat`** script in the root directory.
+    *   It will set up the environment, start the backend, and open your browser to `http://localhost:5000`.
+
+3.  **Manual Start**:
+    *   **Frontend**:
+        ```bash
+        cd Frontend
+        npm install
+        npm run build
+        ```
+    *   **Backend**:
+        ```bash
+        cd backend
+        pip install -r requirements.txt
+        python app.py
+        ```
 
 ---
 
 ## 📂 Project Structure
 
-```
-EduPulse-AI/
-├── backend/            # Flask API & Server Logic
-│   ├── app.py          # Entry point
-│   ├── blueprints/     # API Route Modules
-│   ├── models/         # Database Models
-│   └── requirements.txt
-├── frontend/           # React + Vite Frontend
-│   ├── src/            # UI Source Code
-│   ├── build/          # Production Build Outputs
-│   └── package.json
-└── README.md
-```
+*   **/Frontend**: The React application source code.
+    *   `src/components`: UI Components (Dashboards, Chat Widget, etc.).
+    *   `src/api.js`: API connectors to the Flask backend.
+*   **/backend**: The Flask API server.
+    *   `app.py`: Main entry point.
+    *   `blueprints/`: Modular route handlers for Student, Teacher, Parent.
+    *   `services/`: Python wrappers for Azure AI services.
+*   **start_edupulse.bat**: Deployment script.
 
 ---
 
-## 🛠️ Installation & Setup
-
-### 1. Requirements
-*   Python 3.10+
-*   Node.js 18+ (for building frontend)
-
-### 2. Setup Backend
-```bash
-git clone https://github.com/javawithaaryan/EduPulse-AI.git
-cd EduPulse-AI/backend
-
-# Install Python Dependencies
-pip install -r requirements.txt
-
-# Configure Environment
-# Create a .env file in 'backend/' with your credentials:
-# AZURE_OPENAI_KEY=your_key
-# AZURE_OPENAI_ENDPOINT=your_endpoint
-# SECRET_KEY=your_flask_secret
-```
-
-### 3. Build Frontend (One-time)
-*Note: This generates the static files needed for production.*
-```bash
-cd ../frontend
-npm install
-npm run build
-```
+## 🛡️ Security & Privacy
+*   **Role-Based Access**: Strict separation between Student, Teacher, and Parent data.
+*   **Secure API Proxy**: All AI calls are routed through the Flask backend; API keys are never exposed to the frontend.
 
 ---
 
-## ▶️ Running the Application
-
-The entire system (Frontend + Backend) runs on a single server port.
-
-1.  **Start the Server**
-    ```bash
-    # From the 'backend' directory
-    python app.py
-    ```
-
-2.  **Access the Platform**
-    Open your browser and visit:  
-    👉 **http://localhost:5000**
-
----
-
-## 🧪 Verification
-You can verify the system health and connectivity by visiting:
-*   **Health Check**: `http://localhost:5000/ping`
-*   **Connection Test**: `http://localhost:5000/test`
-
----
-
-## 🤝 Contributing
-Contributions are welcome! Please fork the repository and submit a pull request.
+*Verified and Tested on Windows 11 environment with Python 3.11 and Node v18.*
