@@ -88,7 +88,7 @@ def create_app(config_class=Config):
     # Root Route
     @app.route('/')
     def index():
-        return render_template('index.html')
+        return "EduPulse AI backend is running"
 
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
