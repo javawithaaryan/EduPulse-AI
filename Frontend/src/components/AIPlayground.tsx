@@ -218,8 +218,8 @@ function ChatTab() {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] rounded-lg px-4 py-2 ${msg.role === 'user'
-                                ? 'bg-blue-600 text-white rounded-br-none'
-                                : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                            ? 'bg-blue-600 text-white rounded-br-none'
+                            : 'bg-gray-100 text-gray-800 rounded-bl-none'
                             }`}>
                             {msg.content}
                         </div>
@@ -348,8 +348,8 @@ function MLTab() {
                         <div className="text-center w-full">
                             <div className="mb-4">
                                 <span className={`inline-block p-4 rounded-full ${prediction.risk_level === 'high' ? 'bg-red-100 text-red-600' :
-                                        prediction.risk_level === 'medium' ? 'bg-yellow-100 text-yellow-600' :
-                                            'bg-green-100 text-green-600'
+                                    prediction.risk_level === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                                        'bg-green-100 text-green-600'
                                     }`}>
                                     <Brain size={32} />
                                 </span>

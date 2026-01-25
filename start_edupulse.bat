@@ -1,21 +1,19 @@
 @echo off
-echo ===================================================
-echo   Starting EduPulse AI Platform (Deployment Mode)
-echo ===================================================
-echo.
+echo Starting EduPulse AI...
 
-echo [1/3] Setting up environment...
-set PYTHONPATH=%~dp0backend
-cd /d "%~dp0backend"
+REM Backend
+start cmd /k "
+cd /d %~dp0
+call .venv\Scripts\activate
+cd backend
+flask run
+"
 
-echo [2/3] Activating Python Virtual Environment...
-call "%~dp0.venv\Scripts\activate.bat"
+REM Frontend
+start cmd /k "
+cd /d %~dp0
+cd Frontend
+npm run dev
+"
 
-echo [3/3] Launching Backend Server...
-start "" "http://localhost:5000"
-echo.
-echo Application is running at http://localhost:5000
-echo Press Ctrl+C to stop.
-echo.
-python app.py
-pause
+echo EduPulse AI is starting...
