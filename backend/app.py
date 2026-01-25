@@ -86,9 +86,7 @@ def create_app(config_class=Config):
     app.register_blueprint(wellbeing_bp, url_prefix='/wellbeing')
 
     # Root Route
-    @app.route('/')
-    def index():
-        return "EduPulse AI backend is running"
+
 
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
