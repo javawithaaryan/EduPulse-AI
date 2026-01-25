@@ -11,3 +11,4 @@ azure-search-documents
 requests
 gunicorn
 flask-cors
+uvicorn
