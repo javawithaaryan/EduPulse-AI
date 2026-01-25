@@ -1,4 +1,4 @@
-# EduPulse AI Platform 🎓🚀
+# EduPulse AI 🎓🚀
 
 **Smarter Learning. Calmer Classrooms.**
 
